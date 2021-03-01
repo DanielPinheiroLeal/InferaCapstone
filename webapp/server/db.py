@@ -1,14 +1,31 @@
-from neo4j import GraphDatabase
-from pathlib import Path
+'''
+App backend database functions
+'''
 import time
-
 import random
+from pathlib import Path
+from neo4j import GraphDatabase
+from flask import g
+
+def get_db(pdf_path="", num_neighbours=100):
+    if "db" not in g:
+        g.db = DbDriver("bolt://localhost:7687", "neo4j", "capstone", num_neighbours, pdf_path, True)
+    return g.db
+
+def close_db(e=None):
+    db = g.pop("db", None)
+    if db is not None:
+        db.close()
+
+def init_db(pdf_path, num_neighbours=100):
+    db = get_db(pdf_path=pdf_path, num_neighbours=num_neighbours)
+    db.build_db()
+    db.build_knn_graph()
 
 class DbDriver:
 
     # Connect to the DB
     def __init__(self, uri, user, password, numK, pdf_path, debug_info):
-
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
         self.graph_name = 'neuripsGraph' # Name of the GDS graph
         self.numK = numK # Number of neighbours for the KNN algorithm
@@ -33,7 +50,7 @@ class DbDriver:
             title = "Paper " + str(i) # Placeholder
             coord = [random.random(), random.random(), random.random()] # Placeholder
             self.insert_node(pdf, author, title, coord)
-            i+=1
+            i += 1
 
         if self.debug_info:
             t_final = time.perf_counter()
@@ -41,7 +58,7 @@ class DbDriver:
         print("\nDatabase successfully built! Number of papers: {}\n".format(i))
 
         if self.debug_info:
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            print("(INFO): {:.3f} s elapsed".format(t_final - t_init))
 
     # Destroy the DB and GDS KNN graph (if any)
     def destroy_db(self):
@@ -60,7 +77,7 @@ class DbDriver:
         print("\nDatabase successfully removed!\n")
 
         if self.debug_info:
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            print("(INFO): {:.3f} s elapsed".format(t_final - t_init))
 
     # Insert a node (paper) in the graph database
     def insert_node(self, pdf, author, title, coord):
@@ -83,7 +100,7 @@ class DbDriver:
 
         if self.debug_info:
             t_final = time.perf_counter()
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            print("(INFO): {:.3f} s elapsed".format(t_final - t_init))
 
     # Query the DB by author
     def query_by_author(self, author):
@@ -95,7 +112,7 @@ class DbDriver:
 
         if self.debug_info:
             t_final = time.perf_counter()
-            print("\n(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            print("(INFO): {:.3f} s elapsed".format(t_final - t_init))
 
         return res
 
@@ -109,7 +126,7 @@ class DbDriver:
 
         if self.debug_info:
             t_final = time.perf_counter()
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            print("(INFO): {:.3f} s elapsed".format(t_final - t_init))
 
         return res
 
@@ -123,7 +140,7 @@ class DbDriver:
 
         if self.debug_info:
             t_final = time.perf_counter()
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            print("(INFO): {:.3f} s elapsed".format(t_final - t_init))
 
         return res
 
@@ -213,7 +230,7 @@ class DbDriver:
             p_list.append({"id": p._id, "pdf": prop["pdf"], "author": prop["author"], \
                             "title": prop["title"], "coord": prop["coord"]})
 
-        return(p_list)
+        return p_list
 
     # Remove all nodes and connections in the DB
     @staticmethod
@@ -221,23 +238,8 @@ class DbDriver:
         result = tx.run("MATCH(p:Paper) DETACH DELETE p")
 
 if __name__ == "__main__":
-
-    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"C:\Users\danie\Documents\neurips_dataset\NeurIPS", True)
-
-    db_driver.build_db()
-    db_driver.build_knn_graph()
-
-    p1_list, p2_list = db_driver.query_by_author("Jane Doe 10000")
-    #print(p1_list)
-    #print(p2_list)
-
-    p1_list, p2_list = db_driver.query_by_title("Paper 10000")
-    #print(p1_list)
-    #print(p2_list)
-
-    p_list = db_driver.query_by_coord([0.6, 0.7, 0.1])
-    #print(p_list)
-
-    #db_driver.destroy_db()
-
-    db_driver.close()
+    # db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"H:\Saad\University\Course Material\Fourth Year\Semester 2\ESC472\Project\NeuripsSplit\NeurIPS", True)
+    # db_driver.build_db()
+    # db_driver.build_knn_graph()
+    # db_driver.close()
+    init_db(r"H:\Saad\University\Course Material\Fourth Year\Semester 2\ESC472\Project\NeuripsSplit\NeurIPS")

@@ -1,44 +1,42 @@
+'''
+App backend API
+'''
 import flask
-from test_neurips import DbDriver
+import db
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
-
-db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"H:\Saad\University\Course Material\Fourth Year\Semester 2\ESC472\Project\NeuripsSplit\NeurIPS", True)
+app.teardown_appcontext(db.close_db) # close db after every response
 
 @app.route('/')
 def home():
     return "Hello world!"
 
-# http://localhost:5000/author/Jane%20Doe%2010000
-@app.route('/author/<author>')
-def query_author(author):
-    p1_list, p2_list = db_driver.query_by_author(author)
-    if p1_list:
-        return p1_list[0]
-    elif p2_list:
-        return p2_list[0]
-    else:
-        return "not found"
+@app.route('/search')
+def search():
+    '''
+    Main search route. Looks for URL query string "author", "title", or
+    coordinates "x", "y", "z".
 
-# http://localhost:5000/title/Paper%2010000
-@app.route('/title/<title>')
-def query_title(title):
-    p1_list, p2_list = db_driver.query_by_title(title)
-    if p1_list:
-        return p1_list[0]
-    elif p2_list:
-        return p2_list[0]
-    else:
-        return "not found"
+    Search examples:
+      author: http://localhost:5000/search?author=Jane%20Doe%2010000
+      title: http://localhost:5000/search?title=Paper%2010000
+      coordinates: http://localhost:5000/search?x=0.6&y=0.7&z=0.1
+    '''
+    author = flask.request.args.get('author')
+    title = flask.request.args.get('title')
+    coords = [ flask.request.args.get(coord, type=float) for coord in ('x', 'y', 'z') ]
 
-# http://localhost:5000/coord/0.6/0.7/0.1
-@app.route('/coord/<x>/<y>/<z>')
-def query_coord(x,y,z):
-    p_list = db_driver.query_by_coord([float(x),float(y),float(z)])
-    if p_list:
-        return p_list[0], p_list[1]
+    if author:
+        main_list, knn_list = db.get_db().query_by_author(author)
+        return flask.jsonify(main_list, knn_list)
+    elif title:
+        main_list, knn_list = db.get_db().query_by_title(title)
+        return flask.jsonify(main_list, knn_list)
+    elif all(coords):
+        knn_list = db.get_db().query_by_coord([coords[0], coords[1], coords[2]])
+        return flask.jsonify(knn_list)
     else:
-        return "not found"
+        return flask.jsonify("ERROR: missing or incorrect URL query arguments")
 
 app.run()
