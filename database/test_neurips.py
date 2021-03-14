@@ -1,6 +1,7 @@
 from neo4j import GraphDatabase
 from pathlib import Path
 import time
+import numpy as np
 
 import random
 
@@ -41,7 +42,9 @@ class DbDriver:
         print("\nDatabase successfully built! Number of papers: {}\n".format(i))
 
         if self.debug_info:
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            t_tot = t_final-t_init
+            print("(INFO): {:.3f} s elapsed".format(t_tot))
+            return t_tot
 
     # Destroy the DB and GDS KNN graph (if any)
     def destroy_db(self):
@@ -60,7 +63,9 @@ class DbDriver:
         print("\nDatabase successfully removed!\n")
 
         if self.debug_info:
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            t_tot = t_final-t_init
+            print("(INFO): {:.3f} s elapsed".format(t_tot))
+            return t_tot
 
     # Insert a node (paper) in the graph database
     def insert_node(self, pdf, author, title, coord):
@@ -83,33 +88,41 @@ class DbDriver:
 
         if self.debug_info:
             t_final = time.perf_counter()
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            t_tot = t_final-t_init
+            print("(INFO): {:.3f} s elapsed".format(t_tot))
+            return t_tot
 
     # Query the DB by author
-    def query_by_author(self, author):
+    # mode: 'exact' - get exact matches; 'related' - get related results
+    def query_by_author(self, author, mode):
         if self.debug_info:
             t_init = time.perf_counter()
 
         with self.driver.session() as session:
-            res = session.read_transaction(self._query_by_author, author)
+            res = session.read_transaction(self._query_by_author, author, mode)
 
         if self.debug_info:
             t_final = time.perf_counter()
-            print("\n(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            t_tot = t_final-t_init
+            print("\n(INFO): {:.3f} s elapsed".format(t_tot))
+            return (res, t_tot)
 
         return res
 
     # Query the DB by title
-    def query_by_title(self, title):
+    # mode: 'exact' - get exact matches; 'related' - get related results
+    def query_by_title(self, title, mode):
         if self.debug_info:
             t_init = time.perf_counter()
 
         with self.driver.session() as session:
-            res = session.read_transaction(self._query_by_title, title)
+            res = session.read_transaction(self._query_by_title, title, mode)
 
         if self.debug_info:
             t_final = time.perf_counter()
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            t_tot = t_final-t_init
+            print("(INFO): {:.3f} s elapsed".format(t_tot))
+            return (res, t_tot)
 
         return res
 
@@ -123,7 +136,9 @@ class DbDriver:
 
         if self.debug_info:
             t_final = time.perf_counter()
-            print("(INFO): {:.3f} s elapsed".format(t_final-t_init))
+            t_tot = t_final-t_init
+            print("(INFO): {:.3f} s elapsed".format(t_tot))
+            return (res, t_tot)
 
         return res
 
@@ -157,47 +172,50 @@ class DbDriver:
 
     # Query DB by author. Return matching papers and their nearest neighbours
     @staticmethod
-    def _query_by_author(tx, author):
-        result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.author \
-                        = $author RETURN collect(DISTINCT p1) AS P1, collect(DISTINCT p2) \
-                        AS P2 ", author=author)
+    def _query_by_author(tx, author, mode):
+        if mode == "exact": # Return only exact matches
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.author \
+                        = $author RETURN collect(DISTINCT p1) AS P ", author=author)
+        elif mode == "related": # Return only related papers
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.author \
+                        = $author RETURN collect(DISTINCT p2) AS P ", author=author)
+        else:
+            print("Query mode not supported!")
+            return
 
-        p1_list = []
-        p2_list = []
+        p_list = []
 
         for r in result:
-            for p1 in r["P1"]:
-                prop = p1._properties
-                p1_list.append({"id": p1._id, "pdf": prop["pdf"], "author": prop["author"], \
-                                "title": prop["title"], "coord": prop["coord"]})
-            for p2 in r["P2"]:
-                prop = p2._properties
-                p2_list.append({"id": p2._id, "pdf": prop["pdf"], "author": prop["author"], \
+            for p in r["P"]:
+                prop = p._properties
+                p_list.append({"id": p._id, "pdf": prop["pdf"], "author": prop["author"], \
                                 "title": prop["title"], "coord": prop["coord"]})
 
-        return(p1_list, p2_list)
+        return p_list
 
     # Query DB by paper title. Return matching papers and their nearest neighbours
     @staticmethod
-    def _query_by_title(tx, title):
-        result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.title \
-                        = $title RETURN collect(DISTINCT p1) AS P1, collect(DISTINCT p2) \
-                        AS P2 ", title=title)
+    def _query_by_title(tx, title, mode):
+        if mode == "exact": # Return only exact matches
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.title \
+                        = $title RETURN collect(DISTINCT p1) AS P ", title=title)
+        elif mode == "related":
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.title \
+                        = $title RETURN collect(DISTINCT p2) AS P ", title=title)
+        else:
+            print("Query mode not supported!")
+            return
 
-        p1_list = []
-        p2_list = []
+        p_list = []
 
         for r in result:
-            for p1 in r["P1"]:
-                prop = p1._properties
-                p1_list.append({"id": p1._id, "pdf": prop["pdf"], "author": prop["author"], \
-                                "title": prop["title"], "coord": prop["coord"]})
-            for p2 in r["P2"]:
-                prop = p2._properties
-                p2_list.append({"id": p2._id, "pdf": prop["pdf"], "author": prop["author"], \
+            for p in r["P"]:
+                prop = p._properties
+                p_list.append({"id": p._id, "pdf": prop["pdf"], "author": prop["author"], \
                                 "title": prop["title"], "coord": prop["coord"]})
 
-        return(p1_list, p2_list)
+
+        return p_list
 
     # Query DB by coordinates. Return the nearest neighbours to the given coordinate
     @staticmethod
@@ -213,7 +231,7 @@ class DbDriver:
             p_list.append({"id": p._id, "pdf": prop["pdf"], "author": prop["author"], \
                             "title": prop["title"], "coord": prop["coord"]})
 
-        return(p_list)
+        return p_list
 
     # Remove all nodes and connections in the DB
     @staticmethod
@@ -224,19 +242,47 @@ if __name__ == "__main__":
 
     db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"C:\Users\danie\Documents\neurips_dataset\NeurIPS", True)
 
-    db_driver.build_db()
-    db_driver.build_knn_graph()
+    tear_down_times = [0] * 5
+    build_times = [0] * 5
 
-    p1_list, p2_list = db_driver.query_by_author("Jane Doe 10000")
-    #print(p1_list)
-    #print(p2_list)
+    for i in range(5):
+        tear_down_times[i] = db_driver.destroy_db()
 
-    p1_list, p2_list = db_driver.query_by_title("Paper 10000")
-    #print(p1_list)
-    #print(p2_list)
+        build_db_t = db_driver.build_db()
+        build_knn_t = db_driver.build_knn_graph()
+        build_times[i] = build_db_t + build_knn_t
 
-    p_list = db_driver.query_by_coord([0.6, 0.7, 0.1])
-    #print(p_list)
+    e_author_times = [0] * 1000
+    r_author_times = [0] * 1000
+
+    for i in range(1000):
+
+        p1_list, e_author_times[i] = db_driver.query_by_author("Jane Doe " + str(i), "exact")
+        p2_list, r_author_times[i] = db_driver.query_by_author("Jane Doe " + str(i), "related")
+
+    e_title_times = [0] * 1000
+    r_title_times = [0] * 1000
+
+    for i in range(1000):
+
+        p1_list, e_title_times[i] = db_driver.query_by_title("Paper " + str(i), "exact")
+        p2_list, r_title_times[i] = db_driver.query_by_title("Paper " + str(i), "related")
+
+
+    coord_times = [0] * 1000
+
+    for i in range(1000):
+
+        p_list, coord_times[i] = db_driver.query_by_coord([random.random(), random.random(), random.random()])
+
+
+    print("\nTear Down Time: {:.5f} +- {:.5f} s\n".format(np.mean(tear_down_times), np.std(tear_down_times)))
+    print("\nBuild Time: {:.5f} +- {:.5f} s\n".format(np.mean(build_times), np.std(build_times)))
+    print("\nExact Author Time: {:.8f} +- {:.8f} s\n".format(np.mean(e_author_times), np.std(e_author_times)))
+    print("\nRelated Author Time: {:.8f} +- {:.8f} s\n".format(np.mean(r_author_times), np.std(r_author_times)))
+    print("\nExact Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(e_title_times), np.std(e_title_times)))
+    print("\nRelated Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(r_title_times), np.std(r_title_times)))
+    print("\nCoordinate Time: {:.8f} +- {:.8f} s\n".format(np.mean(coord_times), np.std(coord_times)))
 
     #db_driver.destroy_db()
 
