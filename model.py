@@ -3,11 +3,7 @@ import os as os
 import glob
 from pathlib import Path
 
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer.converter import TextConverter
-from pdfminer.layout import LAParams
-from pdfminer.pdfpage import PDFPage
-from io import StringIO
+from tika import parser
 
 from gensim.corpora.textcorpus import TextCorpus
 from gensim.test.utils import datapath
@@ -106,47 +102,29 @@ def pdf_to_text(input_path, output_path):
 
     for file in files:
         print(file)
-        file_text = convert_pdf_to_txt(file)
+        parsed_pdf = parser.from_file(file)
+        file_text = parsed_pdf['content']
         new_file_name = output_path + Path(file).stem + ".txt"
         text_file = open(new_file_name, 'w')
         text_file.write(file_text)
         text_file.close()
-
-def convert_pdf_to_txt(path):
-    rsrcmgr = PDFResourceManager()
-    retstr = StringIO()
-    codec = 'utf-8'
-    laparams = LAParams()
-    device = TextConverter(rsrcmgr, retstr, laparams=laparams)
-    fp = open(path, 'rb')
-    interpreter = PDFPageInterpreter(rsrcmgr, device)
-    password = ""
-    maxpages = 0
-    caching = True
-    pagenos=set()
-
-    for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password,caching=caching, check_extractable=True):
-        interpreter.process_page(page)
-
-    text = retstr.getvalue()
-
-    fp.close()
-    device.close()
-    retstr.close()
-    return text
-
+    
 if __name__ == '__main__':
     #pdf_to_text("/Users/kamranramji/Documents/NeurIPS/", "/Users/kamranramji/Documents/NeurIPSText/")
     model = SimilarityModel("/Users/kamranramji/Documents/NeurIPSText/", "/Users/kamranramji/Documents/InferaCapstone/model/", 10)
-    #model.build_corpus()
-    model.load_corpus()
-    #model.train_lsi()
-    model.load_lsi()
-    model.load_lda_model()
+    model.build_corpus()
+    #model.load_corpus()
+    model.train_lsi()
+    model.train_lda_model()
+    #model.load_lsi()
+    #model.load_lda_model()
+    print("LSI AXES now printing")
     model.get_lsi_topics()
-    print(model.document_map("A_Representation_Theory_for_Ranking_Functions"))
-    #model.train_lda_model()
+    print("LDA TOPICS now printing")
     model.get_lda_topic_terms()
+    print("Calling document map")
+    print(model.document_map("A_Representation_Theory_for_Ranking_Functions"))
+    print("Calling string lookup")
     print(model.string_lookup("Reinforcement learning"))
 
 
