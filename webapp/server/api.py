@@ -6,11 +6,14 @@ import atexit
 from flask import Flask, jsonify, request, redirect, url_for
 import database
 
+from flask_cors import CORS
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--debug", help="Whether to turn debug mode on or off. True/False", required=False, default=False)
 args = parser.parse_args()
 
 app = Flask(__name__)
+CORS(app)
 if args.debug:
     app.config["DEBUG"] = True
 

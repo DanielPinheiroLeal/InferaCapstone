@@ -1,8 +1,72 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import "./styles.css";
-import { withRouter } from "react-router-dom";
-
+import { withRouter, useLocation, useHistory } from "react-router-dom";
+import SearchBar from '../SearchBar/SearchBar.js';
 function ResultPage(props){
+    const history=useHistory();
+    const search = useLocation().search;
+    const title = new URLSearchParams(search).get('title');
+    const author = new URLSearchParams(search).get('author');
+    const topicString = new URLSearchParams(search).get('topicString');
+    const [resultData, setResultData] = useState();
+    const [isLoaded, setIsLoaded] = useState();
+	useEffect(() => {
+    	getFetch();
+  	}, []);
+	const getFetch = async () => {
+        console.log(title);
+        console.log(author);
+        console.log(topicString);
+
+        let query = 'http://localhost:5000/search?';
+        if(title){
+            query += 'title=';
+            query += title;
+            query += '&mode=related';
+        }else if(author){
+            query += 'author=';
+            query += author;
+        }else if(topicString){
+            query += 'string=';
+            query += topicString;
+        }
+		console.log(query);
+		const response = await fetch(query);
+		const jsonData = await response.json();
+        setIsLoaded(true);
+		console.log(jsonData);
+		setResultData(jsonData);
+	};
+
+    const goToArticle=(articleID)=>{
+
+    };
+
+    return (
+    <div>
+    <div className="searchContainer">
+        <h2 id="searchHeader">Results</h2>
+        <br></br>
+        <SearchBar prop={this}/>
+    </div>
+
+    <div>
+        <ol>
+        {
+            resultData && resultData.length>0 && resultData.map(article => {
+                return <li key={article.id} align="start" onClick={()=>history.push("/article/"+article.id)}>
+                    <div>
+                        <p>{article.title}</p>
+                        <p>{article.author}</p>
+                    </div>
+                </li>
+            })
+        }
+        </ol>
+    </div>
+    </div>
+
+    )
 
 }
 export default ResultPage;

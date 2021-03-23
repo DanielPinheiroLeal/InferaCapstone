@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Route, Switch, withRouter, Link } from "react-router-dom";
+import { Route, Switch, withRouter, Link, useHistory } from "react-router-dom";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from 'react-bootstrap/Navbar';
@@ -12,8 +12,9 @@ import ResultPage from './react_components/ResultPage/ResultPage.js';
 import ArticlePage from './react_components/ArticlePage/ArticlePage.js';
 
 
-export class App extends React.Component {
-  render(){return (
+function App() {
+const history=useHistory
+  return (
     <div className="App">
 	  <Navbar bg="dark">
 	  	<Navbar.Brand href="#home">Document Explorer</Navbar.Brand>
@@ -40,8 +41,8 @@ export class App extends React.Component {
 		}/>
 
 	</Switch>
-    </div>
-  )}
+    </div>);
+  
 }
 
 export default withRouter(App);
