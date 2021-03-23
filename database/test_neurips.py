@@ -275,6 +275,14 @@ if __name__ == "__main__":
 
         p_list, coord_times[i] = db_driver.query_by_coord([random.random(), random.random(), random.random()])
 
+    connection_times = []
+
+    for i in range(100):
+        connection_t1 = time.perf_counter()
+        db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"C:\Users\danie\Documents\neurips_dataset\NeurIPS", True)
+        connection_t2 = time.perf_counter()
+        connection_times.append(connection_t2 - connection_t1)
+
 
     print("\nTear Down Time: {:.5f} +- {:.5f} s\n".format(np.mean(tear_down_times), np.std(tear_down_times)))
     print("\nBuild Time: {:.5f} +- {:.5f} s\n".format(np.mean(build_times), np.std(build_times)))
@@ -283,6 +291,7 @@ if __name__ == "__main__":
     print("\nExact Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(e_title_times), np.std(e_title_times)))
     print("\nRelated Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(r_title_times), np.std(r_title_times)))
     print("\nCoordinate Time: {:.8f} +- {:.8f} s\n".format(np.mean(coord_times), np.std(coord_times)))
+    print("\nConnection Time: {:.5f} +- {:.5f} s\n".format(np.mean(connection_times), np.std(connection_times)))
 
     #db_driver.destroy_db()
 
