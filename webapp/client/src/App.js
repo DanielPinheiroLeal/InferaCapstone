@@ -1,6 +1,6 @@
 import React from 'react';
-
-import { Route, Switch, withRouter, Link, useHistory } from "react-router-dom";
+//import { Router } from 'react-router';
+import { BrowserRouter as Router, Route, Switch, withRouter, Link, useHistory } from "react-router-dom";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from 'react-bootstrap/Navbar';
@@ -10,10 +10,10 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import HomePage from './react_components/HomePage/HomePage.js';
 import ResultPage from './react_components/ResultPage/ResultPage.js';
 import ArticlePage from './react_components/ArticlePage/ArticlePage.js';
-
+import { createBrowserHistory } from 'history';
 
 function App() {
-const history=useHistory
+const history=createBrowserHistory();
   return (
     <div className="App">
 	  <Navbar bg="dark">
@@ -22,26 +22,28 @@ const history=useHistory
 		<Navbar.Collapse className="justify-content-end">
 		</Navbar.Collapse>
 	</Navbar>
-	
-	<Switch>
-		<Route exact path="/" render ={()=>
-			<div className="homePage">
-				<HomePage app={this}/>
-			</div>
-		}/>
-	  	<Route exact path="/search/:id" render ={()=>
-			<div className="searchPage">
-				<ResultPage app={this}/>
-			</div>
-		}/>
-	  	<Route exact path="/article/:id" render ={()=>
-			<div className="articlePage">
-				<ArticlePage app={this}/>
-			</div>
-		}/>
+	<Router history={history}>
 
-	</Switch>
-    </div>);
+		
+			<Route exact path="/" render ={()=>
+				<div className="homePage">
+					<HomePage app={this}/>
+				</div>
+			}/>
+			<Route exact path="/search/:id" render ={()=>
+				<div className="searchPage">
+					<ResultPage app={this}/>
+				</div>
+			}/>
+			<Route exact path="/article/:id" render ={()=>
+				<div className="articlePage">
+					<ArticlePage app={this}/>
+				</div>
+			}/>
+
+	</Router >
+    </div>
+	);
   
 }
 

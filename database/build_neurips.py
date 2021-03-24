@@ -30,7 +30,8 @@ class DbDriver:
         i = 0
         for path in Path(self.pdf_path).rglob('*.pdf'):
             pdf = str(path)
-
+            pdf = pdf.split(self.pdf_path,1)[1]
+            pdf = "http://localhost:8000/"+pdf
             author = "Jane Doe " + str(i) # Placeholder
             title = "Paper " + str(i) # Placeholder
             coord = [random.random(), random.random(), random.random()] # Placeholder
@@ -242,58 +243,7 @@ class DbDriver:
 if __name__ == "__main__":
 
     db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"/bigdata/NeuripsArchive/NeurIPS/", True)
-
-    tear_down_times = [0] * 5
-    build_times = [0] * 5
-
-    for i in range(5):
-        tear_down_times[i] = db_driver.destroy_db()
-
-        build_db_t = db_driver.build_db()
-        build_knn_t = db_driver.build_knn_graph()
-        build_times[i] = build_db_t + build_knn_t
-
-    e_author_times = [0] * 1000
-    r_author_times = [0] * 1000
-
-    for i in range(1000):
-
-        p1_list, e_author_times[i] = db_driver.query_by_author("Jane Doe " + str(i), "exact")
-        p2_list, r_author_times[i] = db_driver.query_by_author("Jane Doe " + str(i), "related")
-
-    e_title_times = [0] * 1000
-    r_title_times = [0] * 1000
-
-    for i in range(1000):
-
-        p1_list, e_title_times[i] = db_driver.query_by_title("Paper " + str(i), "exact")
-        p2_list, r_title_times[i] = db_driver.query_by_title("Paper " + str(i), "related")
-
-
-    coord_times = [0] * 1000
-
-    for i in range(1000):
-
-        p_list, coord_times[i] = db_driver.query_by_coord([random.random(), random.random(), random.random()])
-
-    connection_times = []
-
-    for i in range(100):
-        connection_t1 = time.perf_counter()
-        db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"/bigdata/NeuripsArchive/NeurIPS/", True)
-        connection_t2 = time.perf_counter()
-        connection_times.append(connection_t2 - connection_t1)
-
-
-    print("\nTear Down Time: {:.5f} +- {:.5f} s\n".format(np.mean(tear_down_times), np.std(tear_down_times)))
-    print("\nBuild Time: {:.5f} +- {:.5f} s\n".format(np.mean(build_times), np.std(build_times)))
-    print("\nExact Author Time: {:.8f} +- {:.8f} s\n".format(np.mean(e_author_times), np.std(e_author_times)))
-    print("\nRelated Author Time: {:.8f} +- {:.8f} s\n".format(np.mean(r_author_times), np.std(r_author_times)))
-    print("\nExact Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(e_title_times), np.std(e_title_times)))
-    print("\nRelated Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(r_title_times), np.std(r_title_times)))
-    print("\nCoordinate Time: {:.8f} +- {:.8f} s\n".format(np.mean(coord_times), np.std(coord_times)))
-    print("\nConnection Time: {:.5f} +- {:.5f} s\n".format(np.mean(connection_times), np.std(connection_times)))
-
-    #db_driver.destroy_db()
-
+    db_driver.destroy_db()
+    build_db_t = db_driver.build_db()
+    build_knn_t = db_driver.build_knn_graph()
     db_driver.close()

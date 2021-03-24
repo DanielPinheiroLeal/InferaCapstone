@@ -3,17 +3,7 @@ import "./styles.css";
 import { withRouter, useLocation, useHistory } from "react-router-dom";
 import SearchBar from '../SearchBar/SearchBar.js';
 function ResultPage(props){
-    const history=useHistory();
-    const search = useLocation().search;
-    const title = new URLSearchParams(search).get('title');
-    const author = new URLSearchParams(search).get('author');
-    const topicString = new URLSearchParams(search).get('topicString');
-    const [resultData, setResultData] = useState();
-    const [isLoaded, setIsLoaded] = useState();
-	useEffect(() => {
-    	getFetch();
-  	}, []);
-	const getFetch = async () => {
+    const getFetch = async () => {
         console.log(title);
         console.log(author);
         console.log(topicString);
@@ -37,24 +27,41 @@ function ResultPage(props){
 		console.log(jsonData);
 		setResultData(jsonData);
 	};
+    const history=useHistory();
+    let location=useLocation();
+    console.log(location);
+    const search = location.search;
+    const title = new URLSearchParams(search).get('title');
+    const author = new URLSearchParams(search).get('author');
+    const topicString = new URLSearchParams(search).get('topicString');
+    const [resultData, setResultData] = useState();
+    const [isLoaded, setIsLoaded] = useState();
+	useEffect(() => {
+    	getFetch();
+  	}, [search]);
 
-    const goToArticle=(articleID)=>{
 
+    const goToArticle=(article)=>{
+        article=JSON.stringify(article);
+        article=article.substring(1, article.length-1)
+        history.push("/article/"+article);
     };
 
     return (
     <div>
     <div className="searchContainer">
         <h2 id="searchHeader">Results</h2>
+        <p>{location.pathname}</p>
+        <p>{location.search}</p>
         <br></br>
-        <SearchBar prop={this}/>
+        <SearchBar history={history}/>
     </div>
 
     <div>
         <ol>
         {
             resultData && resultData.length>0 && resultData.map(article => {
-                return <li key={article.id} align="start" onClick={()=>history.push("/article/"+article.id)}>
+                return <li key={article.id} align="start" onClick={()=>goToArticle(article.title)}>
                     <div>
                         <p>{article.title}</p>
                         <p>{article.author}</p>
@@ -69,4 +76,4 @@ function ResultPage(props){
     )
 
 }
-export default ResultPage;
+export default withRouter(ResultPage);
