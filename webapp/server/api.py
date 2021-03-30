@@ -4,9 +4,8 @@ App backend API
 import argparse
 import atexit
 from flask import Flask, jsonify, request, redirect
-import database
-
 from flask_cors import CORS
+import database
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--debug", help="Whether to turn debug mode on or off. True/False", required=False, default=False)
