@@ -6,6 +6,7 @@ Backend server in Python using Flask.
 
 - Python 3.x
 - Flask - `pip install flask`
+- flask_cors - `pip install flask_cors`
 - Neo4j (see PPD under Creation --> Database)
 
 ## How to start server

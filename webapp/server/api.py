@@ -3,7 +3,7 @@ App backend API
 '''
 import argparse
 import atexit
-from flask import Flask, jsonify, request, redirect, url_for
+from flask import Flask, jsonify, request, redirect
 import database
 
 from flask_cors import CORS
@@ -19,23 +19,23 @@ if args.debug:
 
 @app.route('/')
 def home():
-    return redirect(url_for('search'))
+    return redirect('/search')
 
 @app.route('/search')
 def search():
     '''
     Main search route. Looks for URL query string "author", "title", or
-    coordinates "x", "y", "z". If querying by author or title, also requires
+    "coords". If querying by author or title, also requires
     additional query string "mode" as "exact" or "related".
 
     Search examples:
       author: http://localhost:5000/search?author=Jane%20Doe%2010000&mode=exact
       title: http://localhost:5000/search?title=Paper%2010000&mode=related
-      coordinates: http://localhost:5000/search?x=0.6&y=0.7&z=0.1
+      coordinates: http://localhost:5000/search?coords=0.6,0.7,0.1
     '''
     author = request.args.get('author')
     title = request.args.get('title')
-    coords = [ request.args.get(coord, type=float) for coord in ('x', 'y', 'z') ]
+    coords = request.args.get('coords')
     mode = request.args.get('mode')
 
     if author:
@@ -48,8 +48,9 @@ def search():
             return jsonify("[ERROR]: 'mode' query string required for title search")
         res = db.query_by_title(title, mode)
 
-    elif all(coords):
-        res = db.query_by_coord([coords[0], coords[1], coords[2]])
+    elif coords:
+        coords = list(map(float, coords.split(','))) # convert comma separated string to list of floats
+        res = db.query_by_coord(coords)
 
     else:
         return jsonify("[ERROR]: missing or incorrect URL query arguments")
