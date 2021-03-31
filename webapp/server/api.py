@@ -47,6 +47,7 @@ def search():
     elif title:
         if not mode:
             return jsonify("[ERROR]: 'mode' query string required for title search")
+        print("Getting by title: "+title)
         res = db.query_by_title(title, mode)
 
     elif viz:

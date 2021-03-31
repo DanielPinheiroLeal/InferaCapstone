@@ -1,1 +1,5 @@
 /*Article page styling*/
+.pdfview div{
+
+    max-height: 70vh;
+}
