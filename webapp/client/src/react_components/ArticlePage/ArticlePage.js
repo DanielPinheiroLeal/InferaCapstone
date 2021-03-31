@@ -28,15 +28,15 @@ function ArticlePage(props){
         setIsLoaded(true);
 		console.log(jsonData);
 		setResultData(jsonData);
-		console.log(jsonData[0]['pdf']);
-		setPdfUrl(jsonData[0]['pdf']);
+		console.log(jsonData[0]['pdf_url']);
+		setPdfUrl(jsonData[0]['pdf_url']);
 
 	};
 	if(pdfUrl){
 		return(
 
 			
-			<div style={{overflow:'scroll',height:600}}>
+			<div class="pdfview" >
 			<PDFViewer document={{url:pdfUrl}}/>
 			</div>
 			

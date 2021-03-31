@@ -330,14 +330,14 @@ class DbDriver:
 if __name__ == "__main__":
 
     # Start DB driver
-    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"C:\Users\danie\Documents\neurips_dataset\NeurIPS"'\\', r"C:\Users\danie\Documents\neurips_dataset\NeurIPSText"'\\', r"C:\Users\danie\Documents\neurips_dataset\model"'\\', False)
+    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"/bigdata/NeuripsArchive/NeurIPS/", r"../NeurIPSText", r"model/", False)
 
     # Destroy DB
     #db_driver.destroy_db()
 
     # Build and populate DB
     db_driver.build_db(False, False)
-    #db_driver.build_knn_graph()
+    db_driver.build_knn_graph()
 
     # Query DB by author name
     p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")

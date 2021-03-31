@@ -47,12 +47,12 @@ function ResultPage(props){
         history.push("/article/"+article);
     };
 
+    if(resultData && resultData.length>0 && Array.isArray(resultData)){
     return (
     <div>
     <div className="searchContainer">
         <h2 id="searchHeader">Results</h2>
-        <p>{location.pathname}</p>
-        <p>{location.search}</p>
+
         <br></br>
         <SearchBar history={history}/>
     </div>
@@ -60,7 +60,7 @@ function ResultPage(props){
     <div>
         <ol>
         {
-            resultData && resultData.length>0 && resultData.map(article => {
+            resultData && resultData.length>0 && resultData?.map(article => {
                 return <li key={article.id} align="start" onClick={()=>goToArticle(article.title)}>
                     <div>
                         <p>{article.title}</p>
@@ -73,7 +73,24 @@ function ResultPage(props){
     </div>
     </div>
 
-    )
+    )}else{
+        return (
+            <div>
+            <div className="searchContainer">
+                <h2 id="searchHeader">Results</h2>
+                <p>{location.pathname}</p>
+                <p>{location.search}</p>
+                <br></br>
+                <SearchBar history={history}/>
+            </div>
+        
+            <div>
+                No Results Found
+            </div>
+            </div>
+        
+            ) 
+    }
 
 }
 export default withRouter(ResultPage);
