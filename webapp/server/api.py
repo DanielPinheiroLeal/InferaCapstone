@@ -7,7 +7,6 @@ from flask import Flask, jsonify, request, redirect
 from flask_cors import CORS
 import database
 import numpy as np
-import matplotlib as mplt
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--debug", help="Whether to turn debug mode on or off. True/False", required=False, default=False)
@@ -38,6 +37,7 @@ def search():
     title = request.args.get('title')
     coords = request.args.get('coords')
     mode = request.args.get('mode')
+    viz = request.args.get('viz')
 
     if author:
         if not mode:
@@ -49,19 +49,22 @@ def search():
             return jsonify("[ERROR]: 'mode' query string required for title search")
         res = db.query_by_title(title, mode)
 
+    elif viz:
+        res = db.query_by_title(title, 'exact')
         knn = db.query_by_coord(res[0]["coord"])
 
-        coords = []
         for paper in knn:
             coords.append(paper["coord"])
         coords_numpy = np.array(coords)
-        pca = mplt.mlab.PCA(coords_numpy)
-        projection = pca.project(coords_numpy)
-        result = projection[:, :2]
-
+        white_coords = (coords_numpy - coords_numpy.mean(axis=0)) / coords_numpy.std(axis=0)
+        u, s, vh = np.linalg.svd(white_coords)
+        projected_data = np.dot(white_coords, np.transpose(vh[:2]))
         
+        for i, paper in enumerate(knn):
+            paper["processed_coord"] = projected_data[i].tolist()
+        knn.append(res) #the last knn entry is guaranteed to be the search result
 
-
+        res = knn
 
     elif coords:
         coords = list(map(float, coords.split(','))) # convert comma separated string to list of floats
