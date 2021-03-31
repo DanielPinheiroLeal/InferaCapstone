@@ -176,7 +176,7 @@ class DbDriver:
             t_init = time.perf_counter()
 
         with self.driver.session() as session:
-            res = session.read_transaction(self._query_by_coord, coord, self.numK)
+            res = session.read_transaction(self._query_by_coord, string_coord, self.numK)
 
         if self.debug_info:
             t_final = time.perf_counter()
