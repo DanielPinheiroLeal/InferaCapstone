@@ -16,8 +16,9 @@ function ResultPage(props){
         }else if(author){
             query += 'author=';
             query += author;
+            query += '&mode=exact';
         }else if(topicString){
-            query += 'string=';
+            query += 'topic=';
             query += topicString;
         }
 		console.log(query);
@@ -33,7 +34,7 @@ function ResultPage(props){
     const search = location.search;
     const title = new URLSearchParams(search).get('title');
     const author = new URLSearchParams(search).get('author');
-    const topicString = new URLSearchParams(search).get('topicString');
+    const topicString = new URLSearchParams(search).get('topic');
     const [resultData, setResultData] = useState();
     const [isLoaded, setIsLoaded] = useState();
 	useEffect(() => {

@@ -23,11 +23,18 @@ function ArticlePage(props){
 		query += "&mode=related";
 
 		console.log(query);
-		const response = await fetch(query);
-		const jsonData = await response.json();
+		let response = await fetch(query);
+		let jsonData = await response.json();
         setIsLoaded(true);
 		console.log(jsonData);
 		setResultData(jsonData);
+
+		query = "http://localhost:5000/search?title=";
+		//id=id.substring(1, id.length-1)
+		query += id;
+		query += "&mode=exact";
+		response = await fetch(query);
+		jsonData = await response.json();
 		console.log(jsonData[0]['pdf_url']);
 		setPdfUrl(jsonData[0]['pdf_url']);
 
@@ -37,6 +44,9 @@ function ArticlePage(props){
 		article=article.substring(1, article.length-1)
 		history.push("/article/"+article);
 	};
+	useEffect(() => {
+    	getFetch();
+  	}, [id]);
 	if(pdfUrl){
 		return(
 

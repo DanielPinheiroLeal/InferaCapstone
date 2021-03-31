@@ -18,7 +18,7 @@ db_account = {
 
 def get_db(uri="bolt://localhost:7687", user=db_account["user"],
            password=db_account["password"], num_neighbours=25, lsi_dims=10,
-           pdf_path="", text_path="", model_path="", debug_info=False):
+           pdf_path="/bigdata/NeuripsArchive/NeurIPS/", text_path="/home/jeremy/Documents/UofT4/ESC472/InferaCapstone/NeurIPSText/", model_path="/home/jeremy/Documents/UofT4/ESC472/model/", debug_info=False):
     '''
     Connect to neo4j database
 
@@ -35,6 +35,7 @@ def get_db(uri="bolt://localhost:7687", user=db_account["user"],
     print("[INFO]: Connecting to database")
     db = DbDriver(uri, user, password, num_neighbours, lsi_dims, pdf_path,
                   text_path, model_path, debug_info)
+    db.build_db(False,False)
     return db
 
 def close_db(db):

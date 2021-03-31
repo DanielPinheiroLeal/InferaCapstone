@@ -12,7 +12,6 @@ import numpy as np
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--debug", help="Whether to turn debug mode on or off. True/False", required=False, default=False)
 args = parser.parse_args()
-
 app = Flask(__name__)
 CORS(app)
 if args.debug:
@@ -36,6 +35,7 @@ def search():
     author = request.args.get('author')
     title = request.args.get('title')
     coords = request.args.get('coords')
+    topic=request.args.get('topic')
     mode = request.args.get('mode')
     viz = request.args.get('viz')
 
@@ -79,6 +79,15 @@ def search():
 
         if args.debug:
             res, query_time = res
+
+
+    elif topic:
+        #coords = list(map(float, coords.split(','))) # convert comma separated string to list of floats
+        res = db.query_by_string(topic)
+        print(res)
+        if args.debug:
+            res, query_time = res
+
 
     else:
         return jsonify("[ERROR]: missing or incorrect URL query arguments")
@@ -124,5 +133,6 @@ def article_pdf_by_title(title):
     return res
 
 db = database.get_db(debug_info=args.debug) # persistent connection to database at app start
+
 atexit.register(database.close_db, db) # close database connection at app exit
 app.run()
