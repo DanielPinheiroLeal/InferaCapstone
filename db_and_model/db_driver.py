@@ -38,8 +38,6 @@ class DbDriver:
 
         if train_model:
             pdf_to_text(self.pdf_path, self.text_path)
-
-        if train_model:
             self.ml_model.build_corpus()
             self.ml_model.train_lsi()
             self.ml_model.train_lda_model()
@@ -55,6 +53,8 @@ class DbDriver:
             for path in Path(self.pdf_path).glob('*/*.pdf'):
                 pdf = str(path)
 
+                pdf_url = "http://localhost:8000/" + pdf.split(self.pdf_path,1)[1]
+
                 author = "Jane Doe " + str(i) # Placeholder
 
                 title = path.stem
@@ -68,7 +68,7 @@ class DbDriver:
                 topic_prob = [0] * self.numD
                 for coordinate in coord_tuple[1]: # Get LDA probabilities
                     topic_prob[coordinate[0]] = np.float64(coordinate[1])
-                self.insert_node(pdf, author, title, coord, topic_prob)
+                self.insert_node(pdf, pdf_url, author, title, coord, topic_prob)
                 i+=1
 
             if self.debug_info:
@@ -103,9 +103,9 @@ class DbDriver:
             return t_tot
 
     # Insert a node (paper) in the graph database
-    def insert_node(self, pdf, author, title, coord, topic_prob):
+    def insert_node(self, pdf, pdf_url, author, title, coord, topic_prob):
         with self.driver.session() as session:
-            session.write_transaction(self._insert_node, pdf, author, title, coord, topic_prob)
+            session.write_transaction(self._insert_node, pdf, pdf_url, author, title, coord, topic_prob)
 
     # Run the KNN algorithm in the DB nodes
     def build_knn_graph(self):
@@ -197,11 +197,11 @@ class DbDriver:
 
     # Insert a node in the DB given its properties
     @staticmethod
-    def _insert_node(tx, pdf, author, title, coord, topic_prob):
-        result = tx.run("MERGE (p:Paper {pdf:$pdf, author:$author, title:$title}) \
+    def _insert_node(tx, pdf, pdf_url, author, title, coord, topic_prob):
+        result = tx.run("MERGE (p:Paper {pdf:$pdf, pdf_url:$pdf_url, author:$author, title:$title}) \
                         SET p.coord = $coord \
                         SET p.topic_prob = $topic_prob", \
-                        pdf=pdf, author=author, title=title, coord=coord, topic_prob=topic_prob)
+                        pdf=pdf, pdf_url=pdf_url, author=author, title=title, coord=coord, topic_prob=topic_prob)
 
     # Create the GDS graph in the catalog using native projection
     @staticmethod
@@ -247,9 +247,9 @@ class DbDriver:
         for r in result:
             for p in r["P"]:
                 prop = p._properties
-                p_list.append({"id": p._id, "pdf": prop["pdf"], "author": prop["author"], \
-                                "title": prop["title"], "coord": prop["coord"], \
-                                "topic_prob": prop["topic_prob"]})
+                p_list.append({"id": p._id, "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+                                "author": prop["author"], "title": prop["title"], \
+                                "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
         return p_list
 
@@ -271,9 +271,9 @@ class DbDriver:
         for r in result:
             for p in r["P"]:
                 prop = p._properties
-                p_list.append({"id": p._id, "pdf": prop["pdf"], "author": prop["author"], \
-                                "title": prop["title"], "coord": prop["coord"], \
-                                "topic_prob": prop["topic_prob"]})
+                p_list.append({"id": p._id, "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+                                "author": prop["author"], "title": prop["title"], \
+                                "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
 
         return p_list
@@ -289,9 +289,9 @@ class DbDriver:
         for r in result:
             p = r["p"]
             prop = p._properties
-            p_list.append({"id": p._id, "pdf": prop["pdf"], "author": prop["author"], \
-                            "title": prop["title"], "coord": prop["coord"], \
-                            "topic_prob": prop["topic_prob"]})
+            p_list.append({"id": p._id, "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+                            "author": prop["author"], "title": prop["title"], \
+                            "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
         return p_list
 
@@ -307,9 +307,9 @@ class DbDriver:
         for r in result:
             p = r["p"]
             prop = p._properties
-            p_list.append({"id": p._id, "pdf": prop["pdf"], "author": prop["author"], \
-                            "title": prop["title"], "coord": prop["coord"], \
-                            "topic_prob": prop["topic_prob"]})
+            p_list.append({"id": p._id, "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+                            "author": prop["author"], "title": prop["title"], \
+                            "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
         return p_list
 
@@ -321,14 +321,14 @@ class DbDriver:
 if __name__ == "__main__":
 
     # Start DB driver
-    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"C:\Users\danie\Documents\neurips_dataset\NeurIPS\\", r"C:\Users\danie\Documents\neurips_dataset\NeurIPSText\\", r"C:\Users\danie\Documents\neurips_dataset\model\\", False)
+    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"C:\Users\danie\Documents\neurips_dataset\NeurIPS"'\\', r"C:\Users\danie\Documents\neurips_dataset\NeurIPSText"'\\', r"C:\Users\danie\Documents\neurips_dataset\model"'\\', False)
 
     # Destroy DB
     #db_driver.destroy_db()
 
     # Build and populate DB
-    db_driver.build_db(True, True)
-    db_driver.build_knn_graph()
+    db_driver.build_db(False, False)
+    #db_driver.build_knn_graph()
 
     # Query DB by author name
     p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")
