@@ -1,5 +1,7 @@
 '''
 App backend database functions
+
+Functions for server to interface with database via DbDriver
 '''
 import sys
 from pathlib import Path
@@ -14,8 +16,9 @@ db_account = {
     "password": "capstone"
 }
 
-def get_db(pdf_path="", uri="bolt://localhost:7687", user=db_account["user"], 
-           password=db_account["password"], num_neighbours=25, debug_info=False):
+def get_db(uri="bolt://localhost:7687", user=db_account["user"],
+           password=db_account["password"], num_neighbours=25, lsi_dims=10,
+           pdf_path="", text_path="", model_path="", debug_info=False):
     '''
     Connect to neo4j database
 
@@ -30,7 +33,8 @@ def get_db(pdf_path="", uri="bolt://localhost:7687", user=db_account["user"],
         db: DbDriver instance
     '''
     print("[INFO]: Connecting to database")
-    db = DbDriver(uri, user, password, num_neighbours, pdf_path, debug_info)
+    db = DbDriver(uri, user, password, num_neighbours, lsi_dims, pdf_path,
+                  text_path, model_path, debug_info)
     return db
 
 def close_db(db):
@@ -42,21 +46,3 @@ def close_db(db):
     '''
     print("[INFO]: Closing connection to database")
     db.close()
-
-def init_db(pdf_path, uri="bolt://localhost:7687", user=db_account["user"], 
-            password=db_account["password"], num_neighbours=25, debug_info=False):
-    '''
-    Populate database with PDFs and build kNN graph
-
-    Parameters:
-        pdf_path: [string] Top-level path to recursively load PDF files from to populate database
-        uri: [string] Database URI
-        user: [string] Database account username
-        password: [string] Database account password
-        num_neighbours: [int] Number of nearest neighbours to compute between points in graph database
-        debug_info: [bool] Whether to turn on or off debug info for database
-    '''
-    print("[INFO]: Initializing database")
-    db = get_db(pdf_path=pdf_path, num_neighbours=num_neighbours)
-    db.build_db()
-    db.build_knn_graph()
