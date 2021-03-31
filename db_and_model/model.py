@@ -104,6 +104,7 @@ def pdf_to_text(input_path, output_path):
         print(file)
         parsed_pdf = parser.from_file(file)
         file_text = parsed_pdf['content']
+        if file_text is None: file_text = ""
         new_file_name = output_path + Path(file).stem + ".txt"
         text_file = open(new_file_name, 'w', encoding='utf-8')
         text_file.write(file_text)
