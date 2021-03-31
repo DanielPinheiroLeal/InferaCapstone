@@ -20,7 +20,7 @@ function ArticlePage(props){
         let query = "http://localhost:5000/search?title=";
 		//id=id.substring(1, id.length-1)
 		query += id;
-		query += "&mode=exact";
+		query += "&mode=related";
 
 		console.log(query);
 		const response = await fetch(query);
@@ -32,13 +32,36 @@ function ArticlePage(props){
 		setPdfUrl(jsonData[0]['pdf_url']);
 
 	};
+	const goToArticle=(article)=>{
+		article=JSON.stringify(article);
+		article=article.substring(1, article.length-1)
+		history.push("/article/"+article);
+	};
 	if(pdfUrl){
 		return(
 
-			
+			<div>
+				<div>
 			<div class="pdfview" >
 			<PDFViewer document={{url:pdfUrl}}/>
 			</div>
+			</div>
+			<h2>Related Papers:</h2>
+			 <div>
+			 <ol>
+			 {
+				 resultData && resultData.length>0 && resultData?.map(article => {
+					 return <li key={article.id} align="start" onClick={()=>goToArticle(article.title)}>
+						 <div>
+							 <p>{article.title}</p>
+							 <p>{article.author}</p>
+						 </div>
+					 </li>
+				 })
+			 }
+			 </ol>
+		 </div>
+		 </div>
 			
 		)
 	}else{

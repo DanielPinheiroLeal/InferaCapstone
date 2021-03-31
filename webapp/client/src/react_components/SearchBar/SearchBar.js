@@ -11,6 +11,10 @@ function SearchPage(props){
 	//setType("title")
 	const handleSubmit=(e)=>{
 		e.preventDefault()
+		if(!type){
+			alert("Please select a search type")
+			return
+		}
 		//console.log(e.target.value)
 		setField(e.target.value)
 		let query="/search/search?"+type+"="+field

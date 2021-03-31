@@ -12,7 +12,7 @@ function ResultPage(props){
         if(title){
             query += 'title=';
             query += title;
-            query += '&mode=related';
+            query += '&mode=exact';
         }else if(author){
             query += 'author=';
             query += author;
@@ -52,7 +52,6 @@ function ResultPage(props){
     <div>
     <div className="searchContainer">
         <h2 id="searchHeader">Results</h2>
-
         <br></br>
         <SearchBar history={history}/>
     </div>
