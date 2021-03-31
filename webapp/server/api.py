@@ -2,8 +2,9 @@
 App backend API
 '''
 import argparse
+from pathlib import Path
 import atexit
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, jsonify, request, redirect, make_response
 from flask_cors import CORS
 import database
 import numpy as np
@@ -24,14 +25,13 @@ def home():
 @app.route('/search')
 def search():
     '''
-    Main search route. Looks for URL query string "author", "title", or
-    "coords". If querying by author or title, also requires
-    additional query string "mode" as "exact" or "related".
+    Main search route. Looks for URL query string "author", "title", or "coords". If querying by
+    author or title, also requires additional query string "mode" as "exact" or "related".
 
     Search examples:
       author: http://localhost:5000/search?author=Jane%20Doe%2010000&mode=exact
-      title: http://localhost:5000/search?title=Paper%2010000&mode=related
-      coordinates: http://localhost:5000/search?coords=0.6,0.7,0.1
+      title: http://localhost:5000/search?title=Consistent_Plug-in_Classifiers_for_Complex_Objectives_and_Constraints&mode=exact
+      coordinates: http://localhost:5000/search?coords=66,39.4,11.2,4.9,17.9,-8.7,-27.4,3.5,2.3,0.3
     '''
     author = request.args.get('author')
     title = request.args.get('title')
@@ -42,12 +42,12 @@ def search():
     if author:
         if not mode:
             return jsonify("[ERROR]: 'mode' query string required for author search")
-        res = db.query_by_author(author, mode)
+        res, query_time = db.query_by_author(author, mode)
 
     elif title:
         if not mode:
             return jsonify("[ERROR]: 'mode' query string required for title search")
-        res = db.query_by_title(title, mode)
+        res, query_time = db.query_by_title(title, mode)
 
     elif viz:
         res = db.query_by_title(title, 'exact')
@@ -68,13 +68,49 @@ def search():
 
     elif coords:
         coords = list(map(float, coords.split(','))) # convert comma separated string to list of floats
-        res = db.query_by_coord(coords)
+        res, query_time = db.query_by_coord(coords)
 
     else:
         return jsonify("[ERROR]: missing or incorrect URL query arguments")
 
     return jsonify(res)
 
+@app.route('/article/pdf/<pdf_path>')
+def article_pdf(pdf_path):
+    '''
+    Serve PDF files from the file system based on PDF path in file system.
+
+    Parameters:
+        pdf_path: Full file system path to PDF file. E.g., `C:\\pdf_files\\file1.pdf`
+    '''
+    title = Path(pdf_path).stem
+
+    with open(pdf_path, "rb") as pdf:
+        pdf_bytes = pdf.read()
+    res = make_response(pdf_bytes)
+    res.headers['Content-Type'] = 'application/pdf'
+    res.headers['Content-Disposition'] = 'inline; filename={}.pdf'.format(title)
+    return res
+
+@app.route('/article/pdf_by_title/<title>')
+def article_pdf_by_title(title):
+    '''
+    Serve PDF files from the file system based on PDF title in database.
+
+    Parameters:
+        title: PDF title in database
+
+    Example: http://localhost:5000/article/pdf_by_title/Consistent_Plug-in_Classifiers_for_Complex_Objectives_and_Constraints
+    '''
+    res, query_time = db.query_by_title(title, "exact")
+
+    with open(res[0]["pdf"], "rb") as pdf:
+        pdf_bytes = pdf.read()
+    res = make_response(pdf_bytes)
+    res.headers['Content-Type'] = 'application/pdf'
+    res.headers['Content-Disposition'] = 'inline; filename={}.pdf'.format(title)
+    return res
+
 db = database.get_db(debug_info=args.debug) # persistent connection to database at app start
-atexit.register(database.close_db, db)
+atexit.register(database.close_db, db) # close database connection at app exit
 app.run()
