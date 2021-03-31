@@ -71,12 +71,10 @@ class DbDriver:
                 self.insert_node(pdf, pdf_url, author, title, coord, topic_prob)
                 i+=1
 
-            if self.debug_info:
-                t_final = time.perf_counter()
-
             print("\nDatabase successfully built! Number of papers: {}\n".format(i))
 
         if self.debug_info:
+            t_final = time.perf_counter()
             t_tot = t_final-t_init
             print("(INFO): {:.3f} s elapsed".format(t_tot))
             return t_tot
