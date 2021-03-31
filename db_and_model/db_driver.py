@@ -161,8 +161,17 @@ class DbDriver:
 
         return res
 
-    # Query the DB by LSI coordinates
-    def query_by_coord(self, coord):
+    # Query the DB by string
+    def query_by_string(self, string):
+
+        # Transform string into coordinate vector
+        topic_coord = self.ml_model.string_lookup(string)
+        string_coord = [0] * 10
+        dim = 0
+        for coord_tuple in topic_coord:
+            string_coord[dim] = coord_tuple[1]
+            dim+=1
+
         if self.debug_info:
             t_init = time.perf_counter()
 
@@ -343,13 +352,7 @@ if __name__ == "__main__":
     #print(p2_list)
 
     # Query DB by topic string
-    topic_coord = db_driver.ml_model.string_lookup("Reinforcement learning")
-    string_coord = [0] * 10
-    dim = 0
-    for coord_tuple in topic_coord:
-        string_coord[dim] = coord_tuple[1]
-        dim+=1
-    p_list = db_driver.query_by_coord(string_coord)
+    p_list = db_driver.query_by_string("Reinforcement learning")
     #print(p_list)
 
     # Query DB by model topic
