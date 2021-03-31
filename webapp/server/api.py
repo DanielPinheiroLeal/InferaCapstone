@@ -42,12 +42,18 @@ def search():
     if author:
         if not mode:
             return jsonify("[ERROR]: 'mode' query string required for author search")
-        res, query_time = db.query_by_author(author, mode)
+        res = db.query_by_author(author, mode)
+
+        if args.debug:
+            res, query_time = res
 
     elif title:
         if not mode:
             return jsonify("[ERROR]: 'mode' query string required for title search")
-        res, query_time = db.query_by_title(title, mode)
+        res = db.query_by_title(title, mode)
+
+        if args.debug:
+            res, query_time = res
 
     elif viz:
         res = db.query_by_title(title, 'exact')
@@ -68,7 +74,10 @@ def search():
 
     elif coords:
         coords = list(map(float, coords.split(','))) # convert comma separated string to list of floats
-        res, query_time = db.query_by_coord(coords)
+        res = db.query_by_coord(coords)
+
+        if args.debug:
+            res, query_time = res
 
     else:
         return jsonify("[ERROR]: missing or incorrect URL query arguments")
@@ -102,7 +111,9 @@ def article_pdf_by_title(title):
 
     Example: http://localhost:5000/article/pdf_by_title/Consistent_Plug-in_Classifiers_for_Complex_Objectives_and_Constraints
     '''
-    res, query_time = db.query_by_title(title, "exact")
+    res = db.query_by_title(title, "exact")
+    if args.debug:
+        res, query_time = res
 
     with open(res[0]["pdf"], "rb") as pdf:
         pdf_bytes = pdf.read()
