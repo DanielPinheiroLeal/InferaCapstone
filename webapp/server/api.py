@@ -62,7 +62,6 @@ def search():
         
         for i, paper in enumerate(knn):
             paper["processed_coord"] = projected_data[i].tolist()
-        knn.append(res) #the last knn entry is guaranteed to be the search result
 
         res = knn
 
