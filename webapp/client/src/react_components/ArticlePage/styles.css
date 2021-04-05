@@ -1,1 +1,9 @@
 /*Article page styling*/
+.pdfview{
+    height: auto;
+}
+.pdfview .container{
+
+    /* max-height: 70vh; */
+
+}

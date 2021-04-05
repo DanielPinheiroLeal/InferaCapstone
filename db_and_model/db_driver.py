@@ -71,12 +71,10 @@ class DbDriver:
                 self.insert_node(pdf, pdf_url, author, title, coord, topic_prob)
                 i+=1
 
-            if self.debug_info:
-                t_final = time.perf_counter()
-
             print("\nDatabase successfully built! Number of papers: {}\n".format(i))
 
         if self.debug_info:
+            t_final = time.perf_counter()
             t_tot = t_final-t_init
             print("(INFO): {:.3f} s elapsed".format(t_tot))
             return t_tot
@@ -161,13 +159,22 @@ class DbDriver:
 
         return res
 
-    # Query the DB by LSI coordinates
-    def query_by_coord(self, coord):
+    # Query the DB by string
+    def query_by_string(self, string):
+
+        # Transform string into coordinate vector
+        topic_coord = self.ml_model.string_lookup(string)
+        string_coord = [0] * 10
+        dim = 0
+        for coord_tuple in topic_coord:
+            string_coord[dim] = coord_tuple[1]
+            dim+=1
+
         if self.debug_info:
             t_init = time.perf_counter()
 
         with self.driver.session() as session:
-            res = session.read_transaction(self._query_by_coord, coord, self.numK)
+            res = session.read_transaction(self._query_by_coord, string_coord, self.numK)
 
         if self.debug_info:
             t_final = time.perf_counter()
@@ -321,14 +328,14 @@ class DbDriver:
 if __name__ == "__main__":
 
     # Start DB driver
-    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"C:\Users\danie\Documents\neurips_dataset\NeurIPS"'\\', r"C:\Users\danie\Documents\neurips_dataset\NeurIPSText"'\\', r"C:\Users\danie\Documents\neurips_dataset\model"'\\', False)
+    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"/bigdata/NeuripsArchive/NeurIPS/", r"../NeurIPSText", r"model/", False)
 
     # Destroy DB
     #db_driver.destroy_db()
 
     # Build and populate DB
     db_driver.build_db(False, False)
-    #db_driver.build_knn_graph()
+    db_driver.build_knn_graph()
 
     # Query DB by author name
     p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")
@@ -343,13 +350,7 @@ if __name__ == "__main__":
     #print(p2_list)
 
     # Query DB by topic string
-    topic_coord = db_driver.ml_model.string_lookup("Reinforcement learning")
-    string_coord = [0] * 10
-    dim = 0
-    for coord_tuple in topic_coord:
-        string_coord[dim] = coord_tuple[1]
-        dim+=1
-    p_list = db_driver.query_by_coord(string_coord)
+    p_list = db_driver.query_by_string("Reinforcement learning")
     #print(p_list)
 
     # Query DB by model topic

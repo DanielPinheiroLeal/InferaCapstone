@@ -18,16 +18,19 @@ db_account = {
 
 def get_db(uri="bolt://localhost:7687", user=db_account["user"],
            password=db_account["password"], num_neighbours=25, lsi_dims=10,
-           pdf_path="", text_path="", model_path="", debug_info=False):
+           pdf_path="/bigdata/NeuripsArchive/NeurIPS/", text_path="/home/jeremy/Documents/UofT4/ESC472/InferaCapstone/NeurIPSText/", model_path="/home/jeremy/Documents/UofT4/ESC472/model/", debug_info=False):
     '''
     Connect to neo4j database
 
     Parameters:
-        pdf_path: [string] Top-level path to recursively load PDF files from to populate database
         uri: [string] Database URI
         user: [string] Database account username
         password: [string] Database account password
         num_neighbours: [int] Number of nearest neighbours to compute between points in graph database
+        lsi_dims: [int] Number of dimensions for latent semantic indexing
+        pdf_path: [string] Path to top-level directory to recursively load PDF files from
+        text_path: [string] Path to directory which stores all parsed PDF text files
+        model_path: [string] Path to directory which stores saved model files
         debug_info: [bool] Whether to turn on or off debug info for database
     Returns:
         db: DbDriver instance
@@ -35,6 +38,10 @@ def get_db(uri="bolt://localhost:7687", user=db_account["user"],
     print("[INFO]: Connecting to database")
     db = DbDriver(uri, user, password, num_neighbours, lsi_dims, pdf_path,
                   text_path, model_path, debug_info)
+
+    # load saved model into db based on `model_path`
+    db.build_db(False, False)
+
     return db
 
 def close_db(db):

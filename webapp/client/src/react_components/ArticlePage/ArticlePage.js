@@ -20,25 +20,58 @@ function ArticlePage(props){
         let query = "http://localhost:5000/search?title=";
 		//id=id.substring(1, id.length-1)
 		query += id;
-		query += "&mode=exact";
+		query += "&mode=related";
 
 		console.log(query);
-		const response = await fetch(query);
-		const jsonData = await response.json();
+		let response = await fetch(query);
+		let jsonData = await response.json();
         setIsLoaded(true);
 		console.log(jsonData);
 		setResultData(jsonData);
-		console.log(jsonData[0]['pdf']);
-		setPdfUrl(jsonData[0]['pdf']);
+
+		query = "http://localhost:5000/search?title=";
+		//id=id.substring(1, id.length-1)
+		query += id;
+		query += "&mode=exact";
+		response = await fetch(query);
+		jsonData = await response.json();
+		console.log(jsonData[0]['pdf_url']);
+		setPdfUrl(jsonData[0]['pdf_url']);
 
 	};
+	const goToArticle=(article)=>{
+		article=JSON.stringify(article);
+		article=article.substring(1, article.length-1)
+		history.push("/article/"+article);
+	};
+	useEffect(() => {
+    	getFetch();
+  	}, [id]);
 	if(pdfUrl){
 		return(
 
-			
-			<div style={{overflow:'scroll',height:600}}>
+			<div>
+				<div>
+			<div class="pdfview" >
 			<PDFViewer document={{url:pdfUrl}}/>
 			</div>
+			</div>
+			<h2>Related Papers:</h2>
+			 <div>
+			 <ol>
+			 {
+				 resultData && resultData.length>0 && resultData?.map(article => {
+					 return <li key={article.id} align="start" onClick={()=>goToArticle(article.title)}>
+						 <div>
+							 <p>{article.title}</p>
+							 <p>{article.author}</p>
+						 </div>
+					 </li>
+				 })
+			 }
+			 </ol>
+		 </div>
+		 </div>
 			
 		)
 	}else{

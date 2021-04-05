@@ -52,7 +52,6 @@ class SimilarityModel:
 
     def load_lsi(self):
         self.lsi_model = LsiModel.load(self.model_path + "lsi.model")
-        print(self.lsi_model.num_topics)
 
     def get_lsi_topics(self):
         topics = self.lsi_model.show_topics(-1, formatted=False)

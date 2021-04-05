@@ -12,12 +12,13 @@ function ResultPage(props){
         if(title){
             query += 'title=';
             query += title;
-            query += '&mode=related';
+            query += '&mode=exact';
         }else if(author){
             query += 'author=';
             query += author;
+            query += '&mode=exact';
         }else if(topicString){
-            query += 'string=';
+            query += 'topic=';
             query += topicString;
         }
 		console.log(query);
@@ -33,7 +34,7 @@ function ResultPage(props){
     const search = location.search;
     const title = new URLSearchParams(search).get('title');
     const author = new URLSearchParams(search).get('author');
-    const topicString = new URLSearchParams(search).get('topicString');
+    const topicString = new URLSearchParams(search).get('topic');
     const [resultData, setResultData] = useState();
     const [isLoaded, setIsLoaded] = useState();
 	useEffect(() => {
@@ -47,12 +48,11 @@ function ResultPage(props){
         history.push("/article/"+article);
     };
 
+    if(resultData && resultData.length>0 && Array.isArray(resultData)){
     return (
     <div>
     <div className="searchContainer">
         <h2 id="searchHeader">Results</h2>
-        <p>{location.pathname}</p>
-        <p>{location.search}</p>
         <br></br>
         <SearchBar history={history}/>
     </div>
@@ -60,7 +60,7 @@ function ResultPage(props){
     <div>
         <ol>
         {
-            resultData && resultData.length>0 && resultData.map(article => {
+            resultData && resultData.length>0 && resultData?.map(article => {
                 return <li key={article.id} align="start" onClick={()=>goToArticle(article.title)}>
                     <div>
                         <p>{article.title}</p>
@@ -73,7 +73,24 @@ function ResultPage(props){
     </div>
     </div>
 
-    )
+    )}else{
+        return (
+            <div>
+            <div className="searchContainer">
+                <h2 id="searchHeader">Results</h2>
+                <p>{location.pathname}</p>
+                <p>{location.search}</p>
+                <br></br>
+                <SearchBar history={history}/>
+            </div>
+        
+            <div>
+                No Results Found
+            </div>
+            </div>
+        
+            ) 
+    }
 
 }
 export default withRouter(ResultPage);
