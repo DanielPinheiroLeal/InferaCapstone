@@ -67,8 +67,13 @@ class SimilarityModel:
         Maps input filname to lsi model co-ordinates and LDA topics
 
         '''
-        file = open(self.corpus_path + filename + ".txt", 'rb')
-        string = file.read()
+        file = Path(filename)
+        if file.exists():
+            file = open(self.corpus_path + filename + ".txt", 'rb')
+            string = file.read()
+        else:
+            string = ""
+        
         words = preprocess_string(string)
         bow = self.dictionary.doc2bow(words)
         return self.lsi_model[bow], self.lda_model[bow]
