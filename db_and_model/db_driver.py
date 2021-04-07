@@ -37,7 +37,7 @@ class DbDriver:
             print("\nWill load existing model...\n")
 
         if train_model:
-            #pdf_to_text(self.pdf_path, self.text_path)
+            pdf_to_text(self.pdf_path, self.text_path)
             self.ml_model.build_corpus()
             self.ml_model.train_lsi()
             self.ml_model.train_lda_model()
@@ -331,7 +331,7 @@ if __name__ == "__main__":
     db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"/Users/kamranramji/Documents/NeurIPS", r"../NeurIPSText/", r"../model/", False)
 
     # Destroy DB
-    #db_driver.destroy_db()
+    # db_driver.destroy_db()
 
     # Build and populate DB
     db_driver.build_db(False, True)
@@ -360,7 +360,8 @@ if __name__ == "__main__":
 
     db_driver.close()
 
-    # db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"/bigdata/NeuripsArchive/NeurIPS/", True)
+    # PERFORMANCE TESTS
+    # -----------------
 
     # tear_down_times = [0] * 5
     # build_times = [0] * 5
@@ -412,7 +413,3 @@ if __name__ == "__main__":
     # print("\nRelated Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(r_title_times), np.std(r_title_times)))
     # print("\nCoordinate Time: {:.8f} +- {:.8f} s\n".format(np.mean(coord_times), np.std(coord_times)))
     # print("\nConnection Time: {:.5f} +- {:.5f} s\n".format(np.mean(connection_times), np.std(connection_times)))
-
-    # #db_driver.destroy_db()
-
-    # db_driver.close()
