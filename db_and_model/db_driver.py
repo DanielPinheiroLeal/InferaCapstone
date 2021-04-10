@@ -328,39 +328,40 @@ class DbDriver:
 if __name__ == "__main__":
 
     # Start DB driver
-    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"/bigdata/NeuripsArchive/NeurIPS/", r"../NeurIPSText", r"model/", False)
+    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"/Users/kamranramji/Documents/NeurIPS", r"../NeurIPSText/", r"../model/", False)
 
     # Destroy DB
-    #db_driver.destroy_db()
+    # db_driver.destroy_db()
 
     # Build and populate DB
-    db_driver.build_db(False, False)
+    db_driver.build_db(False, True)
     db_driver.build_knn_graph()
 
-    # Query DB by author name
-    p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")
-    p2_list = db_driver.query_by_author("Jane Doe " + str(0), "related")
-    #print(p1_list)
-    #print(p2_list)
+    # # Query DB by author name
+    # p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")
+    # p2_list = db_driver.query_by_author("Jane Doe " + str(0), "related")
+    # #print(p1_list)
+    # #print(p2_list)
 
-    # Query DB by paper title
-    p1_list = db_driver.query_by_title("A_Computer_Simulation_of_Cerebral_Neocortex__Computational_Capabilities_of_Nonlinear_Neural_Networks", "exact")
-    p2_list = db_driver.query_by_title("A_Computer_Simulation_of_Olfactory_Cortex_with_Functional_Implications_for_Storage_and_Retrieval_of_Olfactory_Information", "related")
-    #print(p1_list)
-    #print(p2_list)
+    # # Query DB by paper title
+    # p1_list = db_driver.query_by_title("A_Computer_Simulation_of_Cerebral_Neocortex__Computational_Capabilities_of_Nonlinear_Neural_Networks", "exact")
+    # p2_list = db_driver.query_by_title("A_Computer_Simulation_of_Olfactory_Cortex_with_Functional_Implications_for_Storage_and_Retrieval_of_Olfactory_Information", "related")
+    # #print(p1_list)
+    # #print(p2_list)
 
-    # Query DB by topic string
-    p_list = db_driver.query_by_string("Reinforcement learning")
-    #print(p_list)
+    # # Query DB by topic string
+    # p_list = db_driver.query_by_string("Reinforcement learning")
+    # #print(p_list)
 
-    # Query DB by model topic
-    model_topic_idx = 3
-    p_list = db_driver.query_by_topic_index(model_topic_idx)
-    #print(p_list)
+    # # Query DB by model topic
+    # model_topic_idx = 3
+    # p_list = db_driver.query_by_topic_index(model_topic_idx)
+    # #print(p_list)
 
     db_driver.close()
 
-    # db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"/bigdata/NeuripsArchive/NeurIPS/", True)
+    # PERFORMANCE TESTS
+    # -----------------
 
     # tear_down_times = [0] * 5
     # build_times = [0] * 5
@@ -412,7 +413,3 @@ if __name__ == "__main__":
     # print("\nRelated Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(r_title_times), np.std(r_title_times)))
     # print("\nCoordinate Time: {:.8f} +- {:.8f} s\n".format(np.mean(coord_times), np.std(coord_times)))
     # print("\nConnection Time: {:.5f} +- {:.5f} s\n".format(np.mean(connection_times), np.std(connection_times)))
-
-    # #db_driver.destroy_db()
-
-    # db_driver.close()
