@@ -19,6 +19,18 @@ function SearchPage(props){
 		setField(e.target.value)
 		let query="/search/search?"+type+"="+field
 		console.log(query)
+		console.log("TIME: ")
+		var date = new Date().getDate(); //To get the Current Date
+		var month = new Date().getMonth() + 1; //To get the Current Month
+		var year = new Date().getFullYear(); //To get the Current Year
+		var hours = new Date().getHours(); //To get the Current Hours
+		var min = new Date().getMinutes(); //To get the Current Minutes
+		var sec = new Date().getSeconds(); //To get the Current Seconds
+		var msec = new Date().getMilliseconds(); //To get the Current Seconds
+		console.log(hours)
+		console.log(min)
+		console.log(sec)
+		console.log(msec)
 		history.push(query)
 	}
 	let handleChange=(e)=>{
