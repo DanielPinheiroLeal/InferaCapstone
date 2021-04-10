@@ -11,14 +11,15 @@ db_driver_path = Path(__file__).resolve().parents[2] / "db_and_model"
 sys.path.insert(1, str(db_driver_path))
 from db_driver import DbDriver
 
+db_uri = "bolt://localhost:7687"
 db_account = {
     "user": "neo4j",
     "password": "capstone"
 }
 
-def get_db(uri="bolt://localhost:7687", user=db_account["user"],
+def get_db(uri=db_uri, user=db_account["user"],
            password=db_account["password"], num_neighbours=25, lsi_dims=10,
-           pdf_path="/bigdata/NeuripsArchive/NeurIPS/", text_path="/home/jeremy/Documents/UofT4/ESC472/InferaCapstone/NeurIPSText/", model_path="/home/jeremy/Documents/UofT4/ESC472/model/", debug_info=False):
+           pdf_path="", text_path="", model_path="", debug_info=False):
     '''
     Connect to neo4j database
 
