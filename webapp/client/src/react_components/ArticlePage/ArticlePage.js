@@ -27,8 +27,7 @@ function ArticlePage(props){
     query += "&mode=exact";
     response = await fetch(query);
     jsonData = await response.json();
-
-    setPdfUrl("http://localhost:5000/article/pdf_by_title/" + id)
+    setPdfUrl("http://localhost:5000/article/pdf_by_path/" + jsonData[0]["pdf"])
 
   };
   const goToArticle=(article)=>{
