@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import "./styles.css";
 import { withRouter, useLocation, useHistory } from "react-router-dom";
 import SearchBar from '../SearchBar/SearchBar.js';
+
 function ResultPage(props){
-    const getFetch = async () => {
-        console.log(title);
-        console.log(author);
-        console.log(topicString);
+  const getFetch = async () => {
+    console.log(title);
+    console.log(author);
+    console.log(topicString);
 
         let query = 'http://localhost:5000/search?';
         if(title){
@@ -27,6 +28,18 @@ function ResultPage(props){
         setIsLoaded(true);
 		console.log(jsonData);
 		setResultData(jsonData);
+        console.log("TIME: ")
+		var date = new Date().getDate(); //To get the Current Date
+		var month = new Date().getMonth() + 1; //To get the Current Month
+		var year = new Date().getFullYear(); //To get the Current Year
+		var hours = new Date().getHours(); //To get the Current Hours
+		var min = new Date().getMinutes(); //To get the Current Minutes
+		var sec = new Date().getSeconds(); //To get the Current Seconds
+        var msec = new Date().getMilliseconds(); //To get the Current Seconds
+		console.log(hours)
+		console.log(min)
+		console.log(sec)
+        console.log(msec)
 	};
     const history=useHistory();
     let location=useLocation();
@@ -42,55 +55,56 @@ function ResultPage(props){
   	}, [search]);
 
 
-    const goToArticle=(article)=>{
-        article=JSON.stringify(article);
-        article=article.substring(1, article.length-1)
-        history.push("/article/"+article);
-    };
+  useEffect(() => {
+    getFetch();
+  }, [search]);
 
-    if(resultData && resultData.length>0 && Array.isArray(resultData)){
+  const goToArticle=(article)=>{
+    article=JSON.stringify(article);
+    //article=article.substring(1, article.length-1)
+    history.push("/article/"+article);
+  };
+
+  if(resultData && resultData.length>0 && Array.isArray(resultData)){
     return (
-    <div>
-    <div className="searchContainer">
-        <h2 id="searchHeader">Results</h2>
-        <br></br>
-        <SearchBar history={history}/>
-    </div>
-
-    <div>
-        <ol>
-        {
+      <div>
+        <div className="searchContainer">
+          <h2 id="searchHeader">Results</h2>
+          <br></br>
+          <SearchBar history={history}/>
+        </div>
+        <div>
+          <ol>
+          {
             resultData && resultData.length>0 && resultData?.map(article => {
-                return <li key={article.id} align="start" onClick={()=>goToArticle(article.title)}>
-                    <div>
-                        <p>{article.title}</p>
-                        <p>{article.author}</p>
-                    </div>
-                </li>
+              return <li key={article.id} align="start" onClick={()=>goToArticle(article.paper_id)}>
+                <div>
+                  <p>{article.title}</p>
+                  <p>{article.author}</p>
+                </div>
+              </li>
             })
-        }
-        </ol>
-    </div>
-    </div>
-
-    )}else{
-        return (
-            <div>
-            <div className="searchContainer">
-                <h2 id="searchHeader">Results</h2>
-                <p>{location.pathname}</p>
-                <p>{location.search}</p>
-                <br></br>
-                <SearchBar history={history}/>
-            </div>
-        
-            <div>
-                No Results Found
-            </div>
-            </div>
-        
-            ) 
-    }
-
+          }
+          </ol>
+        </div>
+      </div>
+    )
+  } else {
+    return (
+      <div>
+        <div className="searchContainer">
+          <h2 id="searchHeader">Results</h2>
+          <p>{location.pathname}</p>
+          <p>{location.search}</p>
+          <br></br>
+          <SearchBar history={history}/>
+        </div>
+        <div>
+          No Results Found
+        </div>
+      </div>
+    )
+  }
 }
+
 export default withRouter(ResultPage);

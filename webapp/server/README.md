@@ -31,7 +31,7 @@ E.g., http://localhost:5000/search?author=Jane%20Doe%2010000&mode=exact
 #### Title
 
 Visit `http://localhost:5000/search?title=<TITLE>`, where `<TITLE>` is the title of a document in the database. \
-E.g., http://localhost:5000/search?title=Consistent_Plug-in_Classifiers_for_Complex_Objectives_and_Constraints&mode=exact
+E.g., http://localhost:5000/search?title=Phasor_Neural_Networks&mode=exact
 
 #### Topic
 
@@ -42,10 +42,10 @@ E.g., http://localhost:5000/search?topic=reinforcement%20learning
 
 #### Method 1 - PDF Path
 
-Visit `http://localhost:5000/article/pdf/<PDF_PATH>`, where `<PDF_PATH>` is the full file system path ending in `.pdf` to a PDF file, url-encoded (e.g. with https://meyerweb.com/eric/tools/dencoder/). \
-E.g., `http://localhost:5000/article/pdf/C%3A%5Cpdf_files%5Cfile1.pdf` (for a PDF file at `C:\pdf_files\file1.pdf`)
+Visit `http://localhost:5000/article/pdf_by_path/<PDF_PATH>`, where `<PDF_PATH>` is the full file system path ending in `.pdf` to a PDF file, url-encoded (e.g. with https://meyerweb.com/eric/tools/dencoder/). \
+E.g., `http://localhost:5000/article/pdf_by_path/C%3A%5Cpdf_files%5Cfile1.pdf` (for a PDF file at `C:\pdf_files\file1.pdf`)
 
 #### Method 2 - Title
 
 Visit `http://localhost:5000/article/pdf_by_title/<TITLE>`, where `<TITLE>` is the title of a document in the database. \
-E.g., http://localhost:5000/article/pdf_by_title/Consistent_Plug-in_Classifiers_for_Complex_Objectives_and_Constraints
+E.g., http://localhost:5000/article/pdf_by_title/Phasor_Neural_Networks

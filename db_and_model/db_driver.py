@@ -51,15 +51,16 @@ class DbDriver:
 
             i = 0
             for path in Path(self.pdf_path).glob('*/*.pdf'):
+                paper_id = i
+
                 pdf = str(path)
 
                 pdf_url = "http://localhost:8000/" + pdf.split(self.pdf_path,1)[1]
 
                 author = "Jane Doe " + str(i) # Placeholder
-
-                title = path.stem
-
-                coord_tuple = self.ml_model.document_map(title)
+                #print(path.stem)
+                coord_tuple = self.ml_model.document_map(path.stem)
+                title = path.stem.replace("_", " ")
 
                 coord = [np.finfo(np.float64).eps] * self.numD
                 for coordinate in coord_tuple[0]: # Get LSI coordinates
@@ -68,7 +69,7 @@ class DbDriver:
                 topic_prob = [0] * self.numD
                 for coordinate in coord_tuple[1]: # Get LDA probabilities
                     topic_prob[coordinate[0]] = np.float64(coordinate[1])
-                self.insert_node(pdf, pdf_url, author, title, coord, topic_prob)
+                self.insert_node(paper_id, pdf, pdf_url, author, title, coord, topic_prob)
                 i+=1
 
             print("\nDatabase successfully built! Number of papers: {}\n".format(i))
@@ -101,9 +102,9 @@ class DbDriver:
             return t_tot
 
     # Insert a node (paper) in the graph database
-    def insert_node(self, pdf, pdf_url, author, title, coord, topic_prob):
+    def insert_node(self, paper_id, pdf, pdf_url, author, title, coord, topic_prob):
         with self.driver.session() as session:
-            session.write_transaction(self._insert_node, pdf, pdf_url, author, title, coord, topic_prob)
+            session.write_transaction(self._insert_node, paper_id, pdf, pdf_url, author, title, coord, topic_prob)
 
     # Run the KNN algorithm in the DB nodes
     def build_knn_graph(self):
@@ -200,15 +201,31 @@ class DbDriver:
 
         return res
 
+    # Query the DB by paper_id. paper_id: int
+    def query_by_paper_id(self, paper_id, mode):
+        if self.debug_info:
+            t_init = time.perf_counter()
+
+        with self.driver.session() as session:
+            res = session.read_transaction(self._query_by_paper_id, paper_id, self.numK, mode)
+
+        if self.debug_info:
+            t_final = time.perf_counter()
+            t_tot = t_final-t_init
+            print("(INFO): {:.3f} s elapsed".format(t_tot))
+            return (res, t_tot)
+
+        return res
+
     ###### STATIC METHODS TO RUN CYPHER QUERIES ######
 
     # Insert a node in the DB given its properties
     @staticmethod
-    def _insert_node(tx, pdf, pdf_url, author, title, coord, topic_prob):
-        result = tx.run("MERGE (p:Paper {pdf:$pdf, pdf_url:$pdf_url, author:$author, title:$title}) \
+    def _insert_node(tx, paper_id, pdf, pdf_url, author, title, coord, topic_prob):
+        result = tx.run("MERGE (p:Paper {paper_id:$paper_id, pdf:$pdf, pdf_url:$pdf_url, author:$author, title:$title}) \
                         SET p.coord = $coord \
                         SET p.topic_prob = $topic_prob", \
-                        pdf=pdf, pdf_url=pdf_url, author=author, title=title, coord=coord, topic_prob=topic_prob)
+                        paper_id=paper_id, pdf=pdf, pdf_url=pdf_url, author=author, title=title, coord=coord, topic_prob=topic_prob)
 
     # Create the GDS graph in the catalog using native projection
     @staticmethod
@@ -240,11 +257,11 @@ class DbDriver:
     @staticmethod
     def _query_by_author(tx, author, mode):
         if mode == "exact": # Return only exact matches
-            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.author \
-                        = $author RETURN collect(DISTINCT p1) AS P ", author=author)
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE toLower(p1.author) \
+                        CONTAINS toLower($author) RETURN collect(DISTINCT p1) AS P ", author=author)
         elif mode == "related": # Return only related papers
-            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.author \
-                        = $author RETURN collect(DISTINCT p2) AS P ", author=author)
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE toLower(p1.author) \
+                        CONTAINS toLower($author) RETURN collect(DISTINCT p2) AS P ", author=author)
         else:
             print("Query mode not supported!")
             return
@@ -254,7 +271,7 @@ class DbDriver:
         for r in result:
             for p in r["P"]:
                 prop = p._properties
-                p_list.append({"id": p._id, "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+                p_list.append({"paper_id": prop["paper_id"], "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
                                 "author": prop["author"], "title": prop["title"], \
                                 "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
@@ -264,11 +281,11 @@ class DbDriver:
     @staticmethod
     def _query_by_title(tx, title, mode):
         if mode == "exact": # Return only exact matches
-            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.title \
-                        = $title RETURN collect(DISTINCT p1) AS P ", title=title)
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE toLower(p1.title) \
+                        CONTAINS toLower($title) RETURN collect(DISTINCT p1) AS P ", title=title)
         elif mode == "related":
-            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.title \
-                        = $title RETURN collect(DISTINCT p2) AS P ", title=title)
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE toLower(p1.title) \
+                        CONTAINS toLower($title) RETURN collect(DISTINCT p2) AS P ", title=title)
         else:
             print("Query mode not supported!")
             return
@@ -278,7 +295,7 @@ class DbDriver:
         for r in result:
             for p in r["P"]:
                 prop = p._properties
-                p_list.append({"id": p._id, "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+                p_list.append({"paper_id": prop["paper_id"], "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
                                 "author": prop["author"], "title": prop["title"], \
                                 "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
@@ -296,7 +313,7 @@ class DbDriver:
         for r in result:
             p = r["p"]
             prop = p._properties
-            p_list.append({"id": p._id, "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+            p_list.append({"paper_id": prop["paper_id"], "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
                             "author": prop["author"], "title": prop["title"], \
                             "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
@@ -314,7 +331,31 @@ class DbDriver:
         for r in result:
             p = r["p"]
             prop = p._properties
-            p_list.append({"id": p._id, "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+            p_list.append({"paper_id": prop["paper_id"], "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+                            "author": prop["author"], "title": prop["title"], \
+                            "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
+
+        return p_list
+
+    # Query DB by paper id
+    @staticmethod
+    def _query_by_paper_id(tx, paper_id, K, mode):
+        if mode == "exact": # Return only exact matches
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.paper_id \
+                        = $paper_id RETURN collect(DISTINCT p1) AS P ", paper_id=paper_id)
+        elif mode == "related":
+            result = tx.run("MATCH (p1:Paper)-[s:SIMILAR_TO]->(p2:Paper) WHERE p1.paper_id \
+                        = $paper_id RETURN collect(DISTINCT p2) AS P ", paper_id=paper_id)
+        else:
+            print("Query mode not supported!")
+            return
+
+        p_list = []
+
+        for r in result:
+            for p in r["P"]:
+                prop = p._properties
+                p_list.append({"paper_id": prop["paper_id"], "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
                             "author": prop["author"], "title": prop["title"], \
                             "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
@@ -328,20 +369,21 @@ class DbDriver:
 if __name__ == "__main__":
 
     # Start DB driver
-    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"/Users/kamranramji/Documents/NeurIPS", r"../NeurIPSText/", r"../model/", False)
+    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"/bigdata/NeuripsArchive/NeurIPS/".rstrip(), r"/home/jeremy/Documents/UofT4/ESC472/InferaCapstone/NeurIPSText/".rstrip(), r"/home/jeremy/Documents/UofT4/ESC472/InferaCapstone/model/".rstrip(), False)
 
     # Destroy DB
-    #db_driver.destroy_db()
+    db_driver.destroy_db()
 
     # Build and populate DB
     db_driver.build_db(False, True)
     db_driver.build_knn_graph()
-
+    test=db_driver.ml_model.document_map("Monotone_k-Submodular_Function_Maximization_with_Size_Constraints")
+    print(test)
     # # Query DB by author name
-    # p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")
-    # p2_list = db_driver.query_by_author("Jane Doe " + str(0), "related")
-    # #print(p1_list)
-    # #print(p2_list)
+    #p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")
+    #p2_list = db_driver.query_by_author("Jane Doe " + str(0), "related")
+    #print(p1_list)
+    #print(p2_list)
 
     # # Query DB by paper title
     # p1_list = db_driver.query_by_title("A_Computer_Simulation_of_Cerebral_Neocortex__Computational_Capabilities_of_Nonlinear_Neural_Networks", "exact")
@@ -360,7 +402,8 @@ if __name__ == "__main__":
 
     db_driver.close()
 
-    # db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, r"/bigdata/NeuripsArchive/NeurIPS/", True)
+    # PERFORMANCE TESTS
+    # -----------------
 
     # tear_down_times = [0] * 5
     # build_times = [0] * 5
@@ -412,7 +455,3 @@ if __name__ == "__main__":
     # print("\nRelated Title Time: {:.8f} +- {:.8f} s\n".format(np.mean(r_title_times), np.std(r_title_times)))
     # print("\nCoordinate Time: {:.8f} +- {:.8f} s\n".format(np.mean(coord_times), np.std(coord_times)))
     # print("\nConnection Time: {:.5f} +- {:.5f} s\n".format(np.mean(connection_times), np.std(connection_times)))
-
-    # #db_driver.destroy_db()
-
-    # db_driver.close()
