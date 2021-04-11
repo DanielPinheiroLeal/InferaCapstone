@@ -4,6 +4,7 @@ import { PDFReader } from 'reactjs-pdf-reader';
 import React, { useState, useEffect } from 'react';
 import { Document } from 'react-pdf';
 import PDFViewer from 'pdf-viewer-reactjs'
+import CanvasJS from 'canvasjs';
 
 function ArticlePage(props){
   const history=useHistory();
