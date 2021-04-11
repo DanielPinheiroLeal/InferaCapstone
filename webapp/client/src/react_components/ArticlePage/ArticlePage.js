@@ -41,7 +41,7 @@ function ArticlePage(props){
     return(
       <div>
         <div className="pdfview">
-          <PDFViewer document={{url:pdfUrl}}/>
+          <PDFViewer document={{url:encodeURI(pdfUrl)}}/>
         </div>
         <h2>Related Papers:</h2>
         <div>
