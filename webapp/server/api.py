@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request, redirect, make_response
 from flask_cors import CORS
 import numpy as np
 import database
+from sklearn.manifold import TSNE
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--model-path", help="Path to directory containing saved topic modelling files", required=True)
@@ -120,25 +121,20 @@ def article_pdf_by_title(title):
     res.headers['Content-Disposition'] = 'inline; filename={}.pdf'.format(title)
     return res
 
-@app.route('/visualization/<title>')
-def visualization(title):
-    res = db.query_by_title(title, "exact")
-    knn = db.query_by_title(title, "related")
+@app.route('/visualization/<id>')
+def visualization(id):
+    knn = db.query_by_paper_id(int(id), "related")
 
     coords = []
     for paper in knn:
         coords.append(paper["coord"])
     coords_numpy = np.array(coords)
-    white_coords = (coords_numpy - coords_numpy.mean(axis=0)) / coords_numpy.std(axis=0)
-    u, s, vh = np.linalg.svd(white_coords)
-    projected_data = np.dot(white_coords, np.transpose(vh[:2]))
+    transformed = TSNE(n_components = 2)
 
     for i, paper in enumerate(knn):
-        paper["processed_coord"] = projected_data[i].tolist()
+        paper["processed_coord"] = transformed[i].tolist()
 
-    res = knn
-
-    return jsonify(res)
+    return jsonify(knn)
 
 db = database.get_db(model_path=args.model_path, debug_info=args.debug) # persistent connection to database at app start
 atexit.register(database.close_db, db) # close database connection at app exit
