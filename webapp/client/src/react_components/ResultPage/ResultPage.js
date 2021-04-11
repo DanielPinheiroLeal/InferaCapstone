@@ -48,6 +48,11 @@ function ResultPage(props){
     const title = new URLSearchParams(search).get('title');
     const author = new URLSearchParams(search).get('author');
     const topicString = new URLSearchParams(search).get('topic');
+    const [resultData, setResultData] = useState();
+    const [isLoaded, setIsLoaded] = useState();
+	useEffect(() => {
+    	getFetch();
+  	}, [search]);
 
 
   useEffect(() => {

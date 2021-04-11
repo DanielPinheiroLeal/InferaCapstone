@@ -37,7 +37,7 @@ class DbDriver:
             print("\nWill load existing model...\n")
 
         if train_model:
-            pdf_to_text(self.pdf_path, self.text_path)
+            #pdf_to_text(self.pdf_path, self.text_path)
             self.ml_model.build_corpus()
             self.ml_model.train_lsi()
             self.ml_model.train_lda_model()
@@ -58,10 +58,9 @@ class DbDriver:
                 pdf_url = "http://localhost:8000/" + pdf.split(self.pdf_path,1)[1]
 
                 author = "Jane Doe " + str(i) # Placeholder
-
+                #print(path.stem)
+                coord_tuple = self.ml_model.document_map(path.stem)
                 title = path.stem.replace("_", " ")
-
-                coord_tuple = self.ml_model.document_map(title)
 
                 coord = [np.finfo(np.float64).eps] * self.numD
                 for coordinate in coord_tuple[0]: # Get LSI coordinates
@@ -370,20 +369,21 @@ class DbDriver:
 if __name__ == "__main__":
 
     # Start DB driver
-    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"C:\Users\danie\Documents\neurips_dataset\NeurIPS\ ".rstrip(), r"C:\Users\danie\OneDrive\Área de Trabalho\year_4\Capstone\Project\code\git\InferaCapstone\NeurIPSText\NeurIPSText\ ".rstrip(), r"C:\Users\danie\OneDrive\Área de Trabalho\year_4\Capstone\Project\code\git\InferaCapstone\model\ ".rstrip(), False)
+    db_driver = DbDriver("bolt://localhost:7687", "neo4j", "capstone", 100, 10, r"/bigdata/NeuripsArchive/NeurIPS/".rstrip(), r"/home/jeremy/Documents/UofT4/ESC472/InferaCapstone/NeurIPSText/".rstrip(), r"/home/jeremy/Documents/UofT4/ESC472/InferaCapstone/model/".rstrip(), False)
 
     # Destroy DB
-    # db_driver.destroy_db()
+    db_driver.destroy_db()
 
     # Build and populate DB
-    db_driver.build_db(False, False)
-    #db_driver.build_knn_graph()
-
+    db_driver.build_db(False, True)
+    db_driver.build_knn_graph()
+    test=db_driver.ml_model.document_map("Monotone_k-Submodular_Function_Maximization_with_Size_Constraints")
+    print(test)
     # # Query DB by author name
-    p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")
-    p2_list = db_driver.query_by_author("Jane Doe " + str(0), "related")
-    print(p1_list)
-    print(p2_list)
+    #p1_list = db_driver.query_by_author("Jane Doe " + str(0), "exact")
+    #p2_list = db_driver.query_by_author("Jane Doe " + str(0), "related")
+    #print(p1_list)
+    #print(p2_list)
 
     # # Query DB by paper title
     # p1_list = db_driver.query_by_title("A_Computer_Simulation_of_Cerebral_Neocortex__Computational_Capabilities_of_Nonlinear_Neural_Networks", "exact")
