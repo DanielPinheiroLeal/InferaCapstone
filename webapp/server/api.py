@@ -129,7 +129,7 @@ def visualization(id):
     for paper in knn:
         coords.append(paper["coord"])
     coords_numpy = np.array(coords)
-    transformed = TSNE(n_components = 2)
+    transformed = TSNE(n_components = 2).fit_transform(coords_numpy)
 
     for i, paper in enumerate(knn):
         paper["processed_coord"] = transformed[i].tolist()
