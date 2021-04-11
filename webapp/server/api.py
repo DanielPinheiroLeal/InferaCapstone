@@ -26,19 +26,20 @@ def home():
 @app.route('/search')
 def search():
     '''
-    Main search route. Looks for URL query string "author", "title", or "topic". If querying by
-    author or title, also requires additional query string "mode" as "exact" or "related".
+    Main search route. Looks for URL query string "author", "title", "id", or "topic". If querying
+    by author, title, or id, also requires additional query string "mode" as "exact" or "related".
 
     Search examples:
-      author: http://localhost:5000/search?author=Jane%20Doe%2010000&mode=exact
-      title: http://localhost:5000/search?title=Phasor_Neural_Networks&mode=exact
+      author: http://localhost:5000/search?author=Jane%20Doe%201000&mode=exact
+      title: http://localhost:5000/search?title=Phasor%20Neural%20Networks&mode=exact
+      id: http://localhost:5000/search?id=0&mode=exact
       topic: http://localhost:5000/search?topic=reinforcement%20learning
     '''
     author = request.args.get('author')
     title = request.args.get('title')
+    paper_id = request.args.get('id')
     topic = request.args.get('topic')
     mode = request.args.get('mode')
-    paperid = request.args.get('id')
 
     if author:
         if not mode:
@@ -56,18 +57,19 @@ def search():
         if args.debug:
             res, query_time = res
 
+    elif paper_id:
+        if not mode:
+            return jsonify("[ERROR]: 'mode' query string required for id search"), 400
+        res = db.query_by_paper_id(int(paper_id), mode)
+
+        if args.debug:
+            res, query_time = res
+
     elif topic:
         res = db.query_by_string(topic)
 
         if args.debug:
             res, query_time = res
-    elif paperid:
-        paperid=int(paperid)
-        res = db.query_by_paper_id(paperid,mode)
-
-        if args.debug:
-            res, query_time = res
-
 
     else:
         return jsonify("[ERROR]: missing or incorrect URL query arguments"), 400
@@ -97,6 +99,30 @@ def article_pdf_by_path(pdf_path):
     res.headers['Content-Disposition'] = 'inline; filename={}.pdf'.format(title)
     return res
 
+@app.route('/article/pdf_by_id/<paper_id>')
+def article_pdf_by_id(paper_id):
+    '''
+    Serve PDF files from the file system based on PDF id in database.
+
+    Parameters:
+        paper_id: PDF id in database
+
+    Example: http://localhost:5000/article/pdf_by_id/Phasor_Neural_Networks
+    '''
+    db_res = db.query_by_paper_id(int(paper_id), "exact")
+    if args.debug:
+        db_res, query_time = db_res
+
+    if not db_res:
+        return jsonify("[ERROR]: could not find paper_id ({}) in database".format(paper_id)), 400
+
+    with open(db_res[0]["pdf"], "rb") as pdf:
+        pdf_bytes = pdf.read()
+    res = make_response(pdf_bytes)
+    res.headers['Content-Type'] = 'application/pdf'
+    res.headers['Content-Disposition'] = 'inline; filename={}.pdf'.format(db_res[0]["title"])
+    return res
+
 @app.route('/article/pdf_by_title/<title>')
 def article_pdf_by_title(title):
     '''
@@ -107,14 +133,14 @@ def article_pdf_by_title(title):
 
     Example: http://localhost:5000/article/pdf_by_title/Phasor_Neural_Networks
     '''
-    res = db.query_by_title(title, "exact")
+    db_res = db.query_by_title(title, "exact")
     if args.debug:
-        res, query_time = res
+        db_res, query_time = db_res
 
-    if not res:
+    if not db_res:
         return jsonify("[ERROR]: could not find title ({}) in database".format(title)), 400
 
-    with open(res[0]["pdf"], "rb") as pdf:
+    with open(db_res[0]["pdf"], "rb") as pdf:
         pdf_bytes = pdf.read()
     res = make_response(pdf_bytes)
     res.headers['Content-Type'] = 'application/pdf'
