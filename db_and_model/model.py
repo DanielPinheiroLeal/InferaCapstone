@@ -13,7 +13,7 @@ import gensim
 
 from gensim.parsing.preprocessing import preprocess_string
 
-from gensim.models import LsiModel, LdaModel
+from gensim.models import LsiModel, LdaModel, LogEntropyModel
 
 class Corpus(TextCorpus):
 
@@ -38,6 +38,7 @@ class SimilarityModel:
 
     def build_corpus(self):
         self.corpus = Corpus(self.corpus_path)
+        
         self.dictionary = self.corpus.dictionary
         MmCorpus.serialize(self.model_path + "corpus", self.corpus)
         self.corpus.dictionary.save(self.model_path + "dictionary")
@@ -52,6 +53,13 @@ class SimilarityModel:
 
     def load_lsi(self):
         self.lsi_model = LsiModel.load(self.model_path + "lsi.model")
+    
+    def train_log_entropy(self):
+        self.LogEntropyModel = LogEntropyModel(self.corpus)
+        self.LogEntropyModel.save(self.model_path + "logentropy.model")
+    
+    def load_log_entropy(self):
+        self.LogEntropyModel = LogEntropyModel.load(self.model_path + "logentropy.model")
 
     def get_lsi_topics(self):
         topics = self.lsi_model.show_topics(-1, formatted=False)
@@ -102,7 +110,6 @@ class SimilarityModel:
         return self.lsi_model[bow]
 
 def pdf_to_text(input_path, output_path):
-    print("Called function")
     files = glob.glob(input_path + "*/*.pdf")
 
     for file in files:
@@ -116,22 +123,24 @@ def pdf_to_text(input_path, output_path):
         text_file.close()
 
 if __name__ == '__main__':
-    #pdf_to_text(r"C:\Users\danie\Documents\neurips_dataset\NeurIPS\\", r"C:\Users\danie\Documents\neurips_dataset\NeurIPSText\\")
+    pdf_to_text(r"/Users/kamranramji/Documents/NeurIPS", r"/Users/kamranramji/Documents/InferaCapstone/NeurIPSText")
 
-    model = SimilarityModel(r"C:\Users\danie\Documents\neurips_dataset\NeurIPSText\\", r"C:\Users\danie\Documents\neurips_dataset\model\\", 10)
-    #model.build_corpus()
-    model.load_corpus()
-    #model.train_lsi()
-    #model.train_lda_model()
-    model.load_lsi()
-    model.load_lda_model()
-    print("LSI AXES now printing")
-    model.get_lsi_topics()
-    print("LDA TOPICS now printing")
-    model.get_lda_topic_terms()
-    print("Calling document map")
-    print(model.document_map("Instance-based_Generalization_in_Reinforcement_Learning"))
-    #print("Calling string lookup")
-    #print(model.string_lookup("Reinforcement learning"))
+    model = SimilarityModel(r"/Users/kamranramji/Documents/InferaCapstone/NeurIPSText/", r"/Users/kamranramji/Documents/InferaCapstone/model/", 10)
+    model.build_corpus()
+    #model.load_corpus()
+    model.train_lsi()
+    model.train_lda_model()
+    model.train_log_entropy()
+
+    #model.load_lsi()
+    #model.load_lda_model()
+    # print("LSI AXES now printing")
+    # model.get_lsi_topics()
+    # print("LDA TOPICS now printing")
+    # model.get_lda_topic_terms()
+    # print("Calling document map")
+    # print(model.document_map("Instance-based_Generalization_in_Reinforcement_Learning"))
+    # print("Calling string lookup")
+    # print(model.string_lookup("Reinforcement learning"))
 
 
