@@ -37,6 +37,7 @@ def search():
     title = request.args.get('title')
     topic = request.args.get('topic')
     mode = request.args.get('mode')
+    paperid = request.args.get('id')
 
     if author:
         if not mode:
@@ -59,6 +60,13 @@ def search():
 
         if args.debug:
             res, query_time = res
+    elif paperid:
+        paperid=int(paperid)
+        res = db.query_by_paper_id(paperid,mode)
+
+        if args.debug:
+            res, query_time = res
+
 
     else:
         return jsonify("[ERROR]: missing or incorrect URL query arguments"), 400

@@ -8,19 +8,20 @@ import PDFViewer from 'pdf-viewer-reactjs'
 function ArticlePage(props){
   const history=useHistory();
   let { id }= useParams();
-  const [resultData, setResultData] = useState();
+  const [relatedData, setRelatedData] = useState();
+  const [articleData, setArticleData] = useState();
   const [pdfUrl, setPdfUrl] = useState();
   const getFetch = async () => {
 
-    let query = "http://localhost:5000/search?title=";
+    let query = "http://localhost:5000/search?id=";
     query += id;
     query += "&mode=related";
 
     let response = await fetch(query);
     let jsonData = await response.json();
-    setResultData(jsonData);
+    setRelatedData(jsonData);
 
-    query = "http://localhost:5000/search?title=";
+    query = "http://localhost:5000/search?id=";
     query += id;
     query += "&mode=exact";
     response = await fetch(query);
@@ -47,7 +48,7 @@ function ArticlePage(props){
         <div>
           <ol>
           {
-            resultData && resultData.length>0 && resultData?.map(article => {
+            relatedData && relatedData.length>0 && relatedData?.map(article => {
               return <li key={article.id} align="start" onClick={()=>goToArticle(article.title)}>
                 <div>
                   <p>{article.title}</p>

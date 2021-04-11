@@ -61,7 +61,7 @@ function ResultPage(props){
 
   const goToArticle=(article)=>{
     article=JSON.stringify(article);
-    article=article.substring(1, article.length-1)
+    //article=article.substring(1, article.length-1)
     history.push("/article/"+article);
   };
 
@@ -77,7 +77,7 @@ function ResultPage(props){
           <ol>
           {
             resultData && resultData.length>0 && resultData?.map(article => {
-              return <li key={article.id} align="start" onClick={()=>goToArticle(article.title)}>
+              return <li key={article.id} align="start" onClick={()=>goToArticle(article.paper_id)}>
                 <div>
                   <p>{article.title}</p>
                   <p>{article.author}</p>

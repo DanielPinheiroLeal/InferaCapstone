@@ -353,9 +353,9 @@ class DbDriver:
         p_list = []
 
         for r in result:
-            p = r["P"]
-            prop = p[0]._properties
-            p_list.append({"paper_id": prop["paper_id"], "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
+            for p in r["P"]:
+                prop = p._properties
+                p_list.append({"paper_id": prop["paper_id"], "pdf": prop["pdf"], "pdf_url": prop["pdf_url"], \
                             "author": prop["author"], "title": prop["title"], \
                             "coord": prop["coord"], "topic_prob": prop["topic_prob"]})
 
