@@ -123,7 +123,8 @@ def article_pdf_by_title(title):
 
 @app.route('/visualization/<id>')
 def visualization(id):
-    knn = db.query_by_paper_id(int(id), "related")
+    itself = db.query_by_paper_id(int(id), "exact")
+    knn = itself+db.query_by_paper_id(int(id), "related")
 
     coords = []
     for paper in knn:
