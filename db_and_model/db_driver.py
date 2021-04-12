@@ -38,13 +38,9 @@ class DbDriver:
 
         if train_model:
             #pdf_to_text(self.pdf_path, self.text_path)
-            self.ml_model.build_corpus()
-            self.ml_model.train_lsi()
-            self.ml_model.train_lda_model()
+            self.ml_model.build()
         else:
-            self.ml_model.load_corpus()
-            self.ml_model.load_lsi()
-            self.ml_model.load_lda_model()
+            self.ml_model.load()
 
         if create_db_nodes:
             print("\nBuilding database...\n")

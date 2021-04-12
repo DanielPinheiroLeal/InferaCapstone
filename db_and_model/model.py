@@ -10,6 +10,7 @@ from gensim.test.utils import datapath
 from gensim import utils
 from gensim.corpora.mmcorpus import MmCorpus
 import gensim
+from gensim.corpora import Dictionary
 
 from gensim.parsing.preprocessing import preprocess_string
 
@@ -36,31 +37,28 @@ class SimilarityModel:
         self.num_latent_dimensions = num_latent_dimensions
         self.num_topics = num_topics
 
-    def build_corpus(self):
+    def build(self):
         self.corpus = Corpus(self.corpus_path)
-        
         self.dictionary = self.corpus.dictionary
-        MmCorpus.serialize(self.model_path + "corpus", self.corpus)
-        self.corpus.dictionary.save(self.model_path + "dictionary")
 
-    def load_corpus(self):
-        self.corpus = MmCorpus(self.model_path + "corpus")
-        self.dictionary = gensim.corpora.Dictionary.load(self.model_path + "dictionary")
-
-    def train_lsi(self):
-        self.lsi_model = LsiModel(self.corpus, num_topics=self.num_latent_dimensions)
-        self.lsi_model.save(self.model_path + "lsi.model")
-
-    def load_lsi(self):
-        self.lsi_model = LsiModel.load(self.model_path + "lsi.model")
-    
-    def train_log_entropy(self):
         self.LogEntropyModel = LogEntropyModel(self.corpus)
         self.LogEntropyModel.save(self.model_path + "logentropy.model")
-    
-    def load_log_entropy(self):
-        self.LogEntropyModel = LogEntropyModel.load(self.model_path + "logentropy.model")
 
+        self.weighed_corpus = [self.LogEntropyModel[bow] for bow in self.corpus]
+        
+        self.lsi_model = LsiModel(self.weighed_corpus, num_topics=self.num_latent_dimensions)
+        self.lda_model = LdaModel(self.weighed_corpus, self.num_topics, self.dictionary)
+
+        self.lsi_model.save(self.model_path + "lsi.model")
+        self.lda_model.save(self.model_path + "lda.model")
+        self.corpus.dictionary.save(self.model_path + "dictionary")
+
+    def load(self):
+        self.dictionary = Dictionary.load(self.model_path + "dictionary")
+        self.lsi_model = LsiModel.load(self.model_path + "lsi.model")
+        self.LogEntropyModel = LogEntropyModel.load(self.model_path + "logentropy.model")
+        self.lda_model = LdaModel.load(self.model_path + "lda.model")
+    
     def get_lsi_topics(self):
         topics = self.lsi_model.show_topics(-1, formatted=False)
 
@@ -85,14 +83,8 @@ class SimilarityModel:
         
         words = preprocess_string(string)
         bow = self.dictionary.doc2bow(words)
-        return self.lsi_model[bow], self.lda_model[bow]
-
-    def train_lda_model(self):
-        self.lda_model = LdaModel(self.corpus, self.num_topics, self.dictionary)
-        self.lda_model.save(self.model_path + "lda.model")
-
-    def load_lda_model(self):
-        self.lda_model = LdaModel.load(self.model_path + "lda.model")
+        weighed_bow = self.LogEntropyModel[bow]
+        return self.lsi_model[weighed_bow], self.lda_model[weighed_bow]
 
     def get_lda_topic_terms(self):
         topics = self.lda_model.show_topics(formatted=False)
@@ -107,7 +99,8 @@ class SimilarityModel:
         '''
         words = preprocess_string(input_string)
         bow = self.dictionary.doc2bow(words)
-        return self.lsi_model[bow]
+        weighed_bow = self.LogEntropyModel[weighed_bow]
+        return self.lsi_model[weighed_bow]
 
 def pdf_to_text(input_path, output_path):
     files = glob.glob(input_path + "*/*.pdf")
@@ -123,21 +116,16 @@ def pdf_to_text(input_path, output_path):
         text_file.close()
 
 if __name__ == '__main__':
-    pdf_to_text(r"/Users/kamranramji/Documents/NeurIPS", r"/Users/kamranramji/Documents/InferaCapstone/NeurIPSText")
+    #pdf_to_text(r"/Users/kamranramji/Documents/NeurIPS", r"/Users/kamranramji/Documents/InferaCapstone/NeurIPSText")
 
     model = SimilarityModel(r"/Users/kamranramji/Documents/InferaCapstone/NeurIPSText/", r"/Users/kamranramji/Documents/InferaCapstone/model/", 10)
-    model.build_corpus()
-    #model.load_corpus()
-    model.train_lsi()
-    model.train_lda_model()
-    model.train_log_entropy()
+    # model.build()
+    model.load()
 
-    #model.load_lsi()
-    #model.load_lda_model()
-    # print("LSI AXES now printing")
-    # model.get_lsi_topics()
-    # print("LDA TOPICS now printing")
-    # model.get_lda_topic_terms()
+    print("LSI AXES now printing")
+    model.get_lsi_topics()
+    print("LDA TOPICS now printing")
+    model.get_lda_topic_terms()
     # print("Calling document map")
     # print(model.document_map("Instance-based_Generalization_in_Reinforcement_Learning"))
     # print("Calling string lookup")
