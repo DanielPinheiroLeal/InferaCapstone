@@ -1,9 +1,9 @@
+
 import "./styles.css";
 import { withRouter, useParams, useHistory } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
 
 function SearchPage(props){
-
 	const history=useHistory();
     const [resultData, setResultData] = useState();
     const [field, setField] = useState();
@@ -66,7 +66,5 @@ function SearchPage(props){
 			
 	)
 
-
 }
-
 export default SearchPage;

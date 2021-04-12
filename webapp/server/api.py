@@ -9,7 +9,7 @@ from flask_cors import CORS
 import numpy as np
 import database
 from sklearn.manifold import TSNE
-
+import urllib.parse
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--model-path", help="Path to directory containing saved topic modelling files", required=True)
 parser.add_argument("-d", "--debug", help="Whether to turn debug mode on or off. True/False", required=False, default=False)
@@ -87,7 +87,10 @@ def article_pdf_by_path(pdf_path):
     Example: http://localhost:5000/article/pdf_by_path/C%3A%5C%5Cpdf_files%5C%5Cfile1.pdf
     '''
     title = Path(pdf_path).stem
-
+    pdf_path=urllib.parse.unquote(pdf_path)
+    if(pdf_path[0]=="\\"):
+        pdf_path=pdf_path.replace("\\","/")
+    print(pdf_path)
     try:
         with open(pdf_path, "rb") as pdf:
             pdf_bytes = pdf.read()
