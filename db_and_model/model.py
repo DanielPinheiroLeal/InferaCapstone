@@ -99,7 +99,7 @@ class SimilarityModel:
         '''
         words = preprocess_string(input_string)
         bow = self.dictionary.doc2bow(words)
-        weighed_bow = self.LogEntropyModel[weighed_bow]
+        weighed_bow = self.LogEntropyModel[bow]
         return self.lsi_model[weighed_bow]
 
 def pdf_to_text(input_path, output_path):
