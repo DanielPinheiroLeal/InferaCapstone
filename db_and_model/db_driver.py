@@ -371,7 +371,7 @@ if __name__ == "__main__":
     db_driver.destroy_db()
 
     # Build and populate DB
-    db_driver.build_db(False, True)
+    db_driver.build_db(True, True)
     db_driver.build_knn_graph()
     test=db_driver.ml_model.document_map("Monotone_k-Submodular_Function_Maximization_with_Size_Constraints")
     print(test)
