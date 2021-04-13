@@ -13,11 +13,16 @@ import ArticlePage from './react_components/ArticlePage/ArticlePage.js';
 import { createBrowserHistory } from 'history';
 
 function App() {
-const history=createBrowserHistory();
+const history=createBrowserHistory({forceRefresh:true});
+const goHome=()=>{
+	//article=JSON.stringify(article);
+	//article=article.substring(1, article.length-1)
+	history.push("/");
+};
   return (
     <div className="App">
 	  <Navbar bg="dark">
-	  	<Navbar.Brand href="#home">Document Explorer</Navbar.Brand>
+	  	<Navbar.Brand onClick={()=>goHome()}>Document Explorer</Navbar.Brand>
 	 	<Navbar.Toggle/>
 		<Navbar.Collapse className="justify-content-end">
 		</Navbar.Collapse>

@@ -32,11 +32,49 @@ function ArticlePage(props){
     let jsonData = await response.json();
     console.log(jsonData)
     let data=[]
+    let baseyear = jsonData[0]['year']
+    let min = baseyear
+    let max = baseyear
+    for (let i in jsonData){
+      if (jsonData[i]['year']>max){
+        max = jsonData[i]['year']
+      }else if(jsonData[i]['year']<min){
+        min = jsonData[i]['year']
+      }
+    }
+    console.log(min)
+    console.log(max)
+    let range = Math.max(max-baseyear,baseyear-min)
+    range = Math.max(range,8)
+    console.log(range)
+    let multiplier = Math.floor(256/range)
+    console.log(multiplier)
     for (let i in jsonData){
       let entry = {}
       entry.x=jsonData[i]['processed_coord'][0]
       entry.y=jsonData[i]['processed_coord'][1]
-      entry.name=jsonData[i]['title']
+      let hexC = "FFFFFF"
+      let Cint = parseInt(hexC, 16)
+      //console.log(Cint)
+      let relY = jsonData[i]['year']-baseyear;
+      //console.log(relY)
+      //console.log(range)
+
+
+      if (relY<0){
+        Cint=Cint+multiplier*relY
+        Cint=Cint+multiplier*256*relY
+
+      }else{
+        Cint=Cint-multiplier*relY
+        Cint=Cint-multiplier*65536*relY
+      }
+      //console.log(Cint)
+      hexC=Cint.toString(16)
+      //console.log(hexC)
+      //entry.markerSize=(parseInt(jsonData[i]['year'])-1970)/5
+      entry.name=jsonData[i]['title']+" ("+jsonData[i]['year']+")"
+      entry.markerColor="#"+hexC
       data.push(entry)
 
     }

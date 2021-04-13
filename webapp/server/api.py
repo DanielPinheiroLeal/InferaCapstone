@@ -160,9 +160,12 @@ def visualization(id):
         coords.append(paper["coord"])
     coords_numpy = np.array(coords)
     transformed = TSNE(n_components = 2).fit_transform(coords_numpy)
-
+    offset=transformed[0].tolist()
     for i, paper in enumerate(knn):
-        paper["processed_coord"] = transformed[i].tolist()
+        pc =  transformed[i].tolist()
+        pc[0]=pc[0]-offset[0]
+        pc[1]=pc[1]-offset[1]
+        paper["processed_coord"] = pc
 
     return jsonify(knn)
 
