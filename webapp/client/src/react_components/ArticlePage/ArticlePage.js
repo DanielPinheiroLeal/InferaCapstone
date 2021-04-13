@@ -1,5 +1,6 @@
 import "./styles.css";
 import { withRouter, useParams, useHistory } from "react-router-dom";
+import { createBrowserHistory } from 'history';
 import { PDFReader } from 'reactjs-pdf-reader';
 import React, { useState, useEffect } from 'react';
 import { Document } from 'react-pdf';
@@ -9,7 +10,7 @@ var CanvasJS = CanvasJSReact.CanvasJS;
 var CanvasJSChart = CanvasJSReact.CanvasJSChart;
 
 function ArticlePage(props){
-  const history=useHistory();
+  const history=createBrowserHistory({forceRefresh:true});
   let { id }= useParams();
   const [relatedData, setRelatedData] = useState();
   const [articleData, setArticleData] = useState();
@@ -74,6 +75,7 @@ function ArticlePage(props){
       //console.log(hexC)
       //entry.markerSize=(parseInt(jsonData[i]['year'])-1970)/5
       entry.name=jsonData[i]['title']+" ("+jsonData[i]['year']+")"
+      entry.paperid=jsonData[i]['paper_id']
       entry.markerColor="#"+hexC
       data.push(entry)
 
@@ -105,6 +107,7 @@ function ArticlePage(props){
 			},
 			data:[{
 				type: "scatter",
+        click:function(e){goToArticle(e.dataPoint.paperid)},
 				markerSize: 15,
 				toolTipContent: "{name}: {x}, {y}",
 				dataPoints: data
