@@ -8,24 +8,25 @@ from model import *
 class DbDriver:
 
     # Connect to the DB
-    def __init__(self, uri, user, password, numK, numD, pdf_path, text_path, model_path, debug_info):
+    def __init__(self, uri, user, password, numK, numLSI, numLDA, pdf_path, text_path, model_path, debug_info):
 
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
         self.graph_name = 'neuripsGraph' # Name of the GDS graph
         self.numK = numK # Number of neighbours for the KNN algorithm
-        self.numD = numD # Number of LSI dimensions
+        self.numLSI = numLSI # Number of LSI dimensions
+        self.numLDA = numLDA # Number of LDA topics
         self.pdf_path = pdf_path # FS path to the PDF files (It will search for PDFs recursively starting here)
         self.text_path = text_path # FS path to the .txt files
         self.model_path = model_path # FS path to the model
         self.debug_info = debug_info # Turn on/off debug messages
-        self.ml_model = SimilarityModel(self.text_path, self.model_path, self.numD)
+        self.ml_model = SimilarityModel(self.text_path, self.model_path, self.numLSI, self.numLDA)
 
     # Close DB connection
     def close(self):
         self.driver.close()
 
     # Build the DB
-    def build_db(self, train_model, create_db_nodes):
+    def build_db(self, train_model, create_db_nodes, convert_pdfs):
         if self.debug_info:
             t_init = time.perf_counter()
 
@@ -36,11 +37,17 @@ class DbDriver:
         else:
             print("\nWill load existing model...\n")
 
+        print("Inside db driver: {}".format(convert_pdfs))
+        if convert_pdfs:
+            print("Inside db driver: {}".format(convert_pdfs))
+            pdf_to_text(self.pdf_path, self.text_path)
+
         if train_model:
-            #pdf_to_text(self.pdf_path, self.text_path)
             self.ml_model.build()
         else:
             self.ml_model.load()
+
+        self.topic_terms = self.ml_model.set_topic_terms()
 
         if create_db_nodes:
             print("\nBuilding database...\n")
@@ -59,11 +66,11 @@ class DbDriver:
                 coord_tuple = self.ml_model.document_map(path.stem)
                 title = path.stem.replace("_", " ")
 
-                coord = [np.finfo(np.float64).eps] * self.numD
+                coord = [np.finfo(np.float64).eps] * self.numLSI
                 for coordinate in coord_tuple[0]: # Get LSI coordinates
                     coord[coordinate[0]] = np.float64(coordinate[1])
 
-                topic_prob = [0] * self.numD
+                topic_prob = [0] * self.numLDA
                 for coordinate in coord_tuple[1]: # Get LDA probabilities
                     topic_prob[coordinate[0]] = np.float64(coordinate[1])
                 self.insert_node(paper_id, pdf, pdf_url, author, title,year, coord, topic_prob)
@@ -162,7 +169,7 @@ class DbDriver:
 
         # Transform string into coordinate vector
         topic_coord = self.ml_model.string_lookup(string)
-        string_coord = [0] * 10
+        string_coord = [0] * self.numLSI
         dim = 0
         for coord_tuple in topic_coord:
             string_coord[dim] = coord_tuple[1]

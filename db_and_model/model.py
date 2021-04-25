@@ -41,6 +41,11 @@ class SimilarityModel:
         self.corpus = Corpus(self.corpus_path)
         self.dictionary = self.corpus.dictionary
 
+        lsi_model_file = open(self.model_path + "lsi.model","w+")
+        lda_model_file = open(self.model_path + "lsi.model","w+")
+        log_entropy_model_file = open(self.model_path + "logentropy.model", "w+")
+        dictionary_file = open(self.model_path + "dictionary", "w+")
+
         self.LogEntropyModel = LogEntropyModel(self.corpus)
         self.LogEntropyModel.save(self.model_path + "logentropy.model")
 
@@ -53,19 +58,39 @@ class SimilarityModel:
         self.lda_model.save(self.model_path + "lda.model")
         self.corpus.dictionary.save(self.model_path + "dictionary")
 
+        self.set_topic_terms()
+
     def load(self):
         self.dictionary = Dictionary.load(self.model_path + "dictionary")
         self.lsi_model = LsiModel.load(self.model_path + "lsi.model")
         self.LogEntropyModel = LogEntropyModel.load(self.model_path + "logentropy.model")
         self.lda_model = LdaModel.load(self.model_path + "lda.model")
+        self.set_topic_terms()
     
-    def get_lsi_topics(self):
+    def test_lsi(self):
         topics = self.lsi_model.show_topics(-1, formatted=False)
 
         for topic, words in topics:
             print("Topic {}:".format(topic))
             for word in words:
                 print(self.dictionary[int(word[0])])
+    
+    def test_lda(self):
+        topics = self.lda_model.show_topics(formatted=False)
+        for topic in topics:
+            print("Next topic: ")
+            for term in topic[1]:
+                print(term[0])
+    
+    def set_topic_terms(self):
+        topics = self.lda_model.show_topics(formatted=False)
+        result = []
+        for topic in topics:
+            temp = []
+            for term in topic[1]:
+                temp.append(term[0])
+            result.append(temp)
+        return result
 
     def document_map(self, filename):
         '''
@@ -86,12 +111,7 @@ class SimilarityModel:
         weighed_bow = self.LogEntropyModel[bow]
         return self.lsi_model[weighed_bow], self.lda_model[weighed_bow]
 
-    def get_lda_topic_terms(self):
-        topics = self.lda_model.show_topics(formatted=False)
-        for topic in topics:
-            print("Next topic: ")
-            for term in topic[1]:
-                print(term[0])
+
 
     def string_lookup(self, input_string):
         '''
@@ -118,14 +138,14 @@ def pdf_to_text(input_path, output_path):
 if __name__ == '__main__':
     #pdf_to_text(r"/Users/kamranramji/Documents/NeurIPS", r"/Users/kamranramji/Documents/InferaCapstone/NeurIPSText")
 
-    model = SimilarityModel(r"/Users/kamranramji/Documents/InferaCapstone/NeurIPSText/", r"/Users/kamranramji/Documents/InferaCapstone/model/", 10)
-    # model.build()
-    model.load()
+    model = SimilarityModel(r"/Users/kamranramji/Documents/InferaCapstone/NeurIPSText/", r"/Users/kamranramji/Documents/InferaCapstone/model/", 20, 15)
+    model.build()
+    # model.load()
 
     print("LSI AXES now printing")
-    model.get_lsi_topics()
+    model.test_lsi()
     print("LDA TOPICS now printing")
-    model.get_lda_topic_terms()
+    model.test_lda()
     # print("Calling document map")
     # print(model.document_map("Instance-based_Generalization_in_Reinforcement_Learning"))
     # print("Calling string lookup")

@@ -12,7 +12,17 @@ from sklearn.manifold import TSNE
 import urllib.parse
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--model-path", help="Path to directory containing saved topic modelling files", required=True)
-parser.add_argument("-d", "--debug", help="Whether to turn debug mode on or off. True/False", required=False, default=False)
+parser.add_argument("-pdf", "--pdf-path", help="Path to directory containing pdf files", required=True)
+parser.add_argument("-text", "--text-path", help="Path to directory containing text files", required=True)
+
+parser.add_argument("-d", "--debug", help="Whether to turn debug mode on or off. True/False", default=False, action = "store_true")
+parser.add_argument("-t", "--train", help="Train the model from scratch. True/False", default = False, action = "store_true")
+parser.add_argument("-n", "--nodes", help="Rebuild database nodes. True/False", default=False, action="store_true")
+parser.add_argument("-k", "--neighbours", help="Number of neighbours in knn graph", required=False, default=25, type=int)
+parser.add_argument("-lsi", "--numLSI", help="Number of LSI dimensions", required=False, default=10, type=int)
+parser.add_argument("-lda", "--numLDA", help="Number of LDA topics", required=False, default=10, type=int)
+parser.add_argument("-c", "--convert", help="Convert PDFs to text files", default=False, action="store_true")
+
 args = parser.parse_args()
 app = Flask(__name__)
 CORS(app)
@@ -169,6 +179,14 @@ def visualization(id):
 
     return jsonify(knn)
 
-db = database.get_db(model_path=args.model_path, debug_info=args.debug) # persistent connection to database at app start
+@app.route('/topicwords/<topic_id>')
+def topic_terms(topic_id):
+    return jsonify(db.topic_terms[topic_id])
+
+print(args.convert)
+db = database.get_db(model_path=args.model_path, debug_info=args.debug, build_nodes=args.nodes,
+                    num_neighbours = args.neighbours, lsi_dims = args.numLSI, lda_dims = args.numLDA,
+                    train_model=args.train, pdf_path=args.pdf_path, text_path=args.text_path,
+                    convert_pdfs=args.convert) # persistent connection to database at app start
 atexit.register(database.close_db, db) # close database connection at app exit
 app.run()

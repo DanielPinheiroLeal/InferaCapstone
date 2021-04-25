@@ -18,8 +18,9 @@ db_account = {
 }
 
 def get_db(uri=db_uri, user=db_account["user"],
-           password=db_account["password"], num_neighbours=25, lsi_dims=10,
-           pdf_path="", text_path="", model_path="", debug_info=False):
+           password=db_account["password"], num_neighbours=25, lsi_dims=10, lda_dims=10,
+           pdf_path="", text_path="", model_path="", debug_info=False, build_nodes = True, train_model = True,
+           convert_pdfs = True):
     '''
     Connect to neo4j database
 
@@ -37,11 +38,16 @@ def get_db(uri=db_uri, user=db_account["user"],
         db: DbDriver instance
     '''
     print("[INFO]: Connecting to database")
-    db = DbDriver(uri, user, password, num_neighbours, lsi_dims, pdf_path,
+    db = DbDriver(uri, user, password, num_neighbours, lsi_dims, lda_dims, pdf_path,
                   text_path, model_path, debug_info)
-
-    # load saved model into db based on `model_path`
-    db.build_db(False, False)
+    
+    if build_nodes:
+        db.destroy_db()
+    
+    #build the database with supplied arguments
+    print(convert_pdfs)
+    db.build_db(train_model, build_nodes, convert_pdfs)
+    db.build_knn_graph()
 
     return db
 
