@@ -161,7 +161,10 @@ def visualization(paper_id):
 
 @app.route('/topicwords/<topic_id>')
 def topic_terms(topic_id):
-    return jsonify(db.topic_terms[topic_id])
+    if topic_id != -1:
+        return jsonify(db.topic_terms[topic_id])
+    else:
+        return jsonify(db.topic_terms)
 
 if __name__ == "__main__":
     if not args.pdf_path and (args.nodes or args.convert):
