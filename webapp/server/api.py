@@ -114,6 +114,28 @@ def article_pdf_by_path(pdf_path):
     res.headers['Content-Disposition'] = 'inline; filename={}.pdf'.format(title)
     return res
 
+@app.route('/article/pdf_by_id/<paper_id>')
+def article_pdf_by_id(paper_id):
+    '''
+    Serve PDF files from the file system based on PDF id in database.
+    Parameters:
+        paper_id: PDF id in database
+    Example: http://localhost:5000/article/pdf_by_id/Phasor_Neural_Networks
+    '''
+    db_res = db.query_by_paper_id(int(paper_id), "exact")
+    if args.debug:
+        db_res, query_time = db_res
+
+    if not db_res:
+        return jsonify("[ERROR]: could not find paper_id ({}) in database".format(paper_id)), 400
+
+    with open(db_res[0]["pdf"], "rb") as pdf:
+        pdf_bytes = pdf.read()
+    res = make_response(pdf_bytes)
+    res.headers['Content-Type'] = 'application/pdf'
+    res.headers['Content-Disposition'] = 'inline; filename={}.pdf'.format(db_res[0]["title"])
+    return res
+
 @app.route('/visualization/<paper_id>')
 def visualization(paper_id):
     itself = db.query_by_paper_id(int(paper_id), "exact")

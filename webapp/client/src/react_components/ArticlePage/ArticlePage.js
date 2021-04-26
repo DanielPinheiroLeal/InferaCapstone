@@ -114,7 +114,7 @@ function ArticlePage(props){
 			}]
     })
     setRelatedData(jsonData.slice(1))
-    setPdfUrl("http://localhost:5000/article/pdf_by_path/" + jsonData[0]["pdf"])
+    setPdfUrl("http://localhost:5000/article/pdf_by_id/" + jsonData[0]["paper_id"])
 
 
   };
