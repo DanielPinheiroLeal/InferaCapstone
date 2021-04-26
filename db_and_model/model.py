@@ -52,7 +52,7 @@ class SimilarityModel:
         self.weighed_corpus = [self.LogEntropyModel[bow] for bow in self.corpus]
         
         self.lsi_model = LsiModel(self.weighed_corpus, num_topics=self.num_latent_dimensions)
-        self.lda_model = LdaModel(self.weighed_corpus, self.num_topics, self.dictionary)
+        self.lda_model = LdaModel(self.weighed_corpus, self.num_topics, self.dictionary, passes=5, alpha='auto')
 
         self.lsi_model.save(self.model_path + "lsi.model")
         self.lda_model.save(self.model_path + "lda.model")
@@ -109,7 +109,7 @@ class SimilarityModel:
         words = preprocess_string(string)
         bow = self.dictionary.doc2bow(words)
         weighed_bow = self.LogEntropyModel[bow]
-        return self.lsi_model[weighed_bow], self.lda_model[weighed_bow]
+        return self.lsi_model[weighed_bow], self.lda_model.get_document_topics(weighed_bow, minimum_probability=0.0)
 
 
 
@@ -147,6 +147,13 @@ if __name__ == '__main__':
     print("LDA TOPICS now printing")
     model.test_lda()
     # print("Calling document map")
+    files = "/Users/kamranramji/Documents/InferaCapstone/NeurIPSText/" + "*.txt"
+    # for file in glob.glob(files):
+    #     name = Path(file).stem
+    #     lsi, lda = model.document_map(name)
+    #     lda_value = max(lda, key = lambda item: item[1])[0]
+    #     print(lda_value)
+
     # print(model.document_map("Instance-based_Generalization_in_Reinforcement_Learning"))
     # print("Calling string lookup")
     # print(model.string_lookup("Reinforcement learning"))
