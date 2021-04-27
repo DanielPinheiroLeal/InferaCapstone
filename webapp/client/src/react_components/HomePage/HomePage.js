@@ -2,6 +2,8 @@ import React from 'react';
 import "./styles.css";
 import { withRouter, useHistory } from "react-router-dom";
 import SearchBar from '../SearchBar/SearchBar.js';
+import { TagCloud } from 'react-tagcloud';
+import { useState, useEffect } from 'react';
 function HomePage (props){
 	// constructor(props) {
   //   super(props);
@@ -30,12 +32,23 @@ function HomePage (props){
   //   this.props.history.push(`/search/${this.state.value}`);
   //   //this.props.showMarker(this.state.value)
 	// }
-	
+  const getFetch = async () => {
+
+    let query = "http://localhost:5000/topicwords/-1";
+    //query += "&mode=exact";
+    let response = await fetch(query);
+    let jsonData = await response.json();
+    console.log(jsonData)
+  }
+  useEffect(() => {
+    getFetch();
+  }, []);
 	return (
     <div className="searchContainer">
         <h2 id="searchHeader">Start Search</h2>
         <br></br>
         <SearchBar prop={this}/>
+        
     </div>
 	)
 
