@@ -2,12 +2,45 @@
 import "./styles.css";
 import { withRouter, useParams, useHistory } from "react-router-dom";
 import React, { useState, useEffect } from 'react';
+import { TagCloud } from 'react-tagcloud';
 
 function SearchPage(props){
 	const history=useHistory();
     const [resultData, setResultData] = useState();
     const [field, setField] = useState();
 	const [type, setType] = useState();
+
+	const [topicData, setTopicData] = useState();
+	
+	const getFetch = async () => {
+  
+	  let query = "http://localhost:5000/topicwords/-1";
+	  //query += "&mode=exact";
+	  let response = await fetch(query);
+	  let jsonData = await response.json();
+	  console.log(jsonData)
+	  let td = []
+	  let uni = []
+	  for (let i in jsonData){
+		for (let j in jsonData[i]){
+		  if(uni.includes(jsonData[i][j])==false){
+		  	td.push({value: jsonData[i][j]})
+			uni.push(jsonData[i][j])
+		  }
+		}
+	  }
+	  setTopicData(td)
+	}
+	const addTerm=(term)=>{
+	  //article=JSON.stringify(article);
+	  //article=article.substring(1, article.length-1)
+	  if(field){
+	  	setField(field+" "+term)
+	  }else{
+		setField(term)
+	  }
+
+	};
 	//setType("title")
 	const handleSubmit=(e)=>{
 		e.preventDefault()
@@ -40,31 +73,68 @@ function SearchPage(props){
 		console.log(type)
 		//history.push
 	}
-	
-	return(
-		<div>
-			<form onSubmit={handleSubmit}>
-				<input type="text" onChange={handleChange}/>
-
-				<input type="submit" value="Submit" />
-				<br/>
-				<div >
-					<input type="radio"  value="title" checked={type==="title"} onChange={()=>setType("title")}/>
-					<label for="title">Title</label>
-					<input type="radio"  value="author" checked={type==="author"} onChange={()=>setType("author")}/>
-					<label for="author">Author</label>
-					<input type="radio" value="topic" checked={type==="topic"} onChange={()=>setType("topic")}/>
-					<label for="topic">Topic</label>
-				</div>
-
-
-			</form>
-
-		</div>
-
-
+	useEffect(() => {
+		getFetch();
+	}, []);
+	if(topicData){
+		return(
+			<div>
 			
-	)
+				<form onSubmit={handleSubmit}>
+					<input type="text" value={field} onChange={handleChange}/>
+
+					<input type="submit" value="Submit" />
+					<br/>
+					<div >
+						<input type="radio"  value="title" checked={type==="title"} onChange={()=>setType("title")}/>
+						<label for="title">Title</label>
+						<input type="radio"  value="author" checked={type==="author"} onChange={()=>setType("author")}/>
+						<label for="author">Author</label>
+						<input type="radio" value="topic" checked={type==="topic"} onChange={()=>setType("topic")}/>
+						<label for="topic">Topic</label>
+					</div>
+
+
+				</form>
+					<TagCloud
+				minSize={12}
+				maxSize={35}
+				tags={topicData}
+				onClick={tag=>addTerm(tag.value)}
+				/>
+
+			</div>
+
+
+				
+		)
+	}else{
+		return(
+			<div>
+				<form onSubmit={handleSubmit}>
+					<input type="text" onChange={handleChange}/>
+
+					<input type="submit" value="Submit" />
+					<br/>
+					<div >
+						<input type="radio"  value="title" checked={type==="title"} onChange={()=>setType("title")}/>
+						<label for="title">Title</label>
+						<input type="radio"  value="author" checked={type==="author"} onChange={()=>setType("author")}/>
+						<label for="author">Author</label>
+						<input type="radio" value="topic" checked={type==="topic"} onChange={()=>setType("topic")}/>
+						<label for="topic">Topic</label>
+					</div>
+
+
+				</form>
+
+
+			</div>
+
+
+				
+		)
+	}
 
 }
 export default SearchPage;

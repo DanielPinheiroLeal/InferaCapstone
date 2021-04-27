@@ -90,8 +90,7 @@ function ResultPage(props){
             <div>
             <div className="searchContainer">
                 <h2 id="searchHeader">Results</h2>
-                <p>{location.pathname}</p>
-                <p>{location.search}</p>
+
                 <br></br>
                 <SearchBar history={history}/>
             </div>

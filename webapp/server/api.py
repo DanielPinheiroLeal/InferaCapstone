@@ -161,6 +161,7 @@ def visualization(paper_id):
 
 @app.route('/topicwords/<topic_id>')
 def topic_terms(topic_id):
+    topic_id=int(topic_id)
     if topic_id != -1:
         return jsonify(db.topic_terms[topic_id])
     else:

@@ -166,6 +166,8 @@ class DbDriver:
         topic_coord = self.ml_model.string_lookup(string)
         string_coord = [0] * self.numLSI
         dim = 0
+        print(len(topic_coord))
+        print(len(string_coord))
         for coord_tuple in topic_coord:
             string_coord[dim] = coord_tuple[1]
             dim+=1
