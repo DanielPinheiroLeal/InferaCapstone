@@ -1,23 +1,9 @@
-# How to Setup
+# Efficient Document Retrieval Through Topic Modelling
 
-Required Python packages:
-	Numpy
-	Scikit-learn
-	Gensim
-	Flask
+ESC472 Capstone | Client: Infera AI
 
-Install neo4j Desktop
-Install nodejs
+See [PPD](./PPD.pdf) (Process and Product Document) for the full design report.
 
-Go to client directory and run 
-	npm install
+## Quickstart Guide
 
-Got to db_and_model and run
-	python3 db_driver.py
-
-Then, run npm start
-Go to server and run
-	python3 api.py
-
-
-	
+See Section 4.2 in [PPD](./PPD.pdf) for installation and start up instructions.

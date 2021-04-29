@@ -7,17 +7,12 @@ Backend server in Python using Flask.
 - Python 3.x
 - Flask - `pip install flask`
 - flask_cors - `pip install flask_cors`
-- Neo4j (see PPD under Creation --> Database)
+- Neo4j (see Section 4.2 (Quickstart Guide) in PPD)
 
 ## How to start server
 
 - Start neo4j database
-- `python api.py -m '/path/to/saved/model/'`
-    - Command line arguments:
-        - `-m`, `--model-path`: Required. Full file system path to directory containing saved model files. If on Windows, requires double backslash at end. \
-        e.g. `python api.py -m 'C:\saved_model\\'`
-        - `-d`, `--debug`: Optional. Set to `True` to turn on debug mode. Default: `False` \
-        e.g. `python api.py -m 'C:\saved_model\\' -d True`
+- Run `python api.py` with necessary command line arguments (see Section 4.2 (Quickstart Guide) in PPD)
 
 ## Functionality
 
@@ -55,7 +50,6 @@ E.g., `http://localhost:5000/article/pdf_by_path/C%3A%5Cpdf_files%5Cfile1.pdf` (
 Visit `http://localhost:5000/article/pdf_by_id/<ID>`, where `<ID>` is the ID of a document in the database. \
 E.g., http://localhost:5000/article/pdf_by_id/0
 
-#### Method 3 - Title
+## Visualization, Topic words
 
-Visit `http://localhost:5000/article/pdf_by_title/<TITLE>`, where `<TITLE>` is the title of a document in the database. \
-E.g., http://localhost:5000/article/pdf_by_title/Phasor_Neural_Networks
+See Section 7.2 in PPD for more info.
